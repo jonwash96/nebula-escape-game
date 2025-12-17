@@ -1,0 +1,10 @@
+*.ai
+
+assets/story/text.html
+assets/story/createStory.js
+
+assets/svg
+
+log.txt
+
+projectManagement

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="./dashboard.css">
+    <script defer src="./dashboard.js"></script>
+</head>
+<body>
+    <div id="db-grid-container">
+        <header id="game-status-header" class="header">User's Turn</header>
+        <div id="bracket-container" class="component-container">
+            <div id="brkt-offence-summary" class="db-bracket left">
+                <?xml version="1.0" encoding="UTF-8"?>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1144.44 450" preserveAspectRatio="none" width="100%" height="100%">
+                    <g><path d="M1144.44,0H50C22.39,0,0,22.39,0,50v400h558.22V125c0-27.61,22.39-50,50-50h532.22V0Z"/>
+                    </g></svg>
+            </div>
+
+            <div id="brkt-enemy-ships" class="db-bracket left"></div>
+            
+            <div id="brkt-enemy-stats" class="db-bracket left">
+                <?xml version="1.0" encoding="UTF-8"?>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1144.44 450" preserveAspectRatio="none" width="100%" height="100%">
+                    <g><path d="M1144.44,450H50c-27.61,0-50-22.39-50-50V0h558.22v325c0,27.61,22.39,50,50,50h532.22v75Z"/>
+                    </g></svg>
+            </div>
+            <div id="brkt-defence-summary" class="db-bracket right">
+                <?xml version="1.0" encoding="UTF-8"?>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1144.44 450" preserveAspectRatio="none" width="100%" height="100%">
+                    <g><path d="M0,0h572.22s522.22,0,522.22,0c27.61,0,50,22.39,50,50v400h-558.22V125c0-27.61-22.39-50-50-50H0V0Z"/>
+                    </g></svg>
+            </div>
+
+            <div id="brkt-usr-ships" class="db-bracket right"></div>
+
+            <div id="brkt-usr-stats" class="db-bracket right">
+                <?xml version="1.0" encoding="UTF-8"?>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1144.44 450" preserveAspectRatio="none" width="100%" height="100%">
+                    <g><path d="M0,450h572.22s522.22,0,522.22,0c27.61,0,50-22.39,50-50V0s-562.22,0-558.22,0v325c0,27.61-22.39,50-50,50H0s0,75,0,75Z"/>
+                    </g></svg>
+            </div>
+        </div>
+        <div id="db-btn-block" class="component-container">
+            <div id="attack-controls" class="left">
+                <button id="btn-fire" class="tilebtn red">Fire</button>
+                <button id="" class="tilebtn">Fire</button>
+                <button id="" class="tilebtn">Fire</button>
+                <button id="turn-timer" class="tilebtn">Fire</button>
+                <button id="" class="tilebtn">Fire</button>
+                <button id="" class="tilebtn">Fire</button>
+            </div>
+            <div class="center">
+                <div class="status-list-item red">
+                    <div class="pill"></div>
+                    <p class="title">Life Support...</p>
+                    <p class="num">10%</p>
+                </div>
+                <div class="status-list-item dblue">
+                    <div class="pill"></div>
+                    <p class="title">Patients Healed...</p>
+                    <p class="num">+6</p>
+                </div>
+                <div class="status-list-item cyan">
+                    <div class="pill"></div>
+                    <p class="title">Shields Offline...</p>
+                    <p class="num">X</p>
+                </div>
+            </div>
+            <div id="game-controls" class="right">
+                <button id="btn-full-grid" class="tilebtn red">Fire</button>
+                <button id="btn-focus-usr" class="tilebtn">Fire</button>
+                <button id="btn-pause" class="tilebtn">Fire</button>
+                <button id="btn-orient" class="tilebtn">Fire</button>
+                <button id="btn-focus-enemy" class="tilebtn">Fire</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

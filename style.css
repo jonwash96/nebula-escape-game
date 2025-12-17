@@ -1,0 +1,7 @@
+* {
+    box-sizing: border-box;
+    --dblue: #000124;
+    --steelblue: #003c5f;
+    --cyan: cyan;
+    --dblue-steelblue: linear-gradient(to bottom right, var(--dblue), var(--steelblue))
+}
