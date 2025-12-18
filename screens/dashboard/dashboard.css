@@ -5,6 +5,7 @@ body {
     width:100wv;
     height:100hv;
     color:white;
+    overflow: none;
 }
 
 #db-grid-container {
@@ -12,11 +13,51 @@ body {
     background: linear-gradient(to bottom right, var(--dblue), var(--steelblue));
     background-size:cover;
     display: grid;
-    width: 95vw;
-    height: 95vh;
+    width: 100vw;
+    height: 100vh;
     border-radius:0 0 8em 0;
     grid-template-areas: "top" "bottom";
     grid-template-rows: 80% auto;
+
+}
+
+#db-text-overlay {
+    position: absolute;
+    inset:0;
+    width: 100vw;
+    height: 78vh;
+    z-index: 2;
+    margin-top:15px;
+    padding:0 1%;
+    /* border: 1px solid magenta; */
+    display: grid block;
+    grid-template-columns: 15% 13% auto 13% 15%;
+    grid-template-rows: calc(50px - 1em) calc(30% - 50px) auto 30%;
+    gap: 1em 2em;
+    grid-template-areas: 
+        ". . header . . "
+        "offense . . . defense"
+        "opp-ships . . . usr-ships"
+        "opp-status . . . usr-status";
+
+    & .header {
+        grid-area: header;
+        font-size: 32pt;
+    }
+
+    #enemy-summray-text-overlay {grid-area:offense;}
+    #enemy-ships-text-overlay {grid-area:opp-ships;}
+    #enemy-status-text-overlay {grid-area:opp-status;}
+    #usr-summay-text-overlay {grid-area:defense;text-align: right;}
+    #usr-ships-text-overlay {grid-area:usr-ships;text-align: right;}
+    #usr-status-text-overlay {grid-area:usr-status;text-align: right;}
+
+    & div {
+        /* border:1px solid yellow; */
+        position:relative;
+        padding: 2%;
+        color:var(--midnight);
+    }
 }
 
 #bracket-container {
@@ -27,38 +68,124 @@ body {
     grid-template-columns: 15% 15% auto 15% 15%;
     grid-template-rows: 30% auto 30%;
     gap: 1em;
-}
+    grid-template-areas: 
+    "offense offense . defense defense"
+    "opp-ships board board board usr-ships"
+    "opp-status opp-status . usr-status usr-status";
 
+
+}
 .db-bracket {
-    background: cyan;
-    fill: var(--cyan);
+    background: var(--cyan);
+    & svg {fill:var(--cyan);z-index:0;}
 }
 
 #brkt-offence-summary {
-    grid-column: 1/3;
-    grid-row: 1/2;
+    grid-area: offense;
     background: transparent;
 }
 #brkt-enemy-ships {
-    grid-column: 1/2;
-    grid-row: 2/3;
+    grid-area: opp-ships;
 }
 #brkt-enemy-stats {
-    grid-column: 1/3;
-    grid-row: 3/4;
+    grid-area: opp-status;
     background: transparent;
 }
 #brkt-defence-summary {
-    grid-column: 4/6;
-    grid-row: 1/2;
+    grid-area: defense;
     background: transparent;
 }
 #brkt-usr-ships {
-    grid-column: 5/6;
-    grid-row: 2/3;
+    grid-area: usr-ships;
 }
 #brkt-usr-stats {
-    grid-column: 4/6;
-    grid-row: 3/4;
+    grid-area: usr-status;
     background: transparent;
 }
+
+
+#db-controls-grid {
+    grid-area:bottom;
+    display: grid;
+    padding:0 1% 3% 1%;
+    grid-template:"left center right" auto / 2fr 1fr 2fr;
+
+    /* & div {border:1px solid green;} */
+
+    .db-controls {
+        display:flex;
+        flex-wrap: wrap;
+        width:100%;
+        position:relative;
+        gap: 1em 3em;
+    }
+    
+    #attack-controls {
+        grid-area: left;
+        justify-content: flex-start;
+    }
+    
+    #game-controls {
+        grid-area: right;
+        justify-content: flex-end;
+    }
+    
+    & .center {
+        grid-area:center;
+        display:grid;
+        gap: 1em;
+        grid-template: 
+            "l1 m r1" 33.33%
+            "l2 m r2" 33.33%
+            "l3 bm2 r3" 33.33% / auto auto auto;
+    
+        & div:nth-child(1) {grid-area:l1;}
+        & div:nth-child(2) {grid-area:l2;}
+        & div:nth-child(3) {grid-area:l3;}
+
+        & .status-list-item {
+            display:grid;
+            grid-template:"pill title num" auto / auto 2fr 1fr;
+            gap:6px;
+            font-size: 10pt;
+            position: relative;
+
+            & .pill {width:20px;border-radius:3px;grid-area:pill;}
+            & .title {font-size:1em;grid-area:title;}
+            & .num {font-size: 2em;grid-area:num;}
+        }
+    }
+    
+}
+
+.tile-btn {
+    border:none;
+    padding:3px;
+    width:175px;
+    height:60px;
+}
+
+
+main {
+    position: absolute;
+    /* inset:0; */
+    /* padding-top:5%; */
+    width:100vw;
+    height:100%;
+    z-index: 10;
+    display: grid;
+    grid-template: 
+        ". . . ." 10%
+        ". opp usr . " auto
+        ". . . . " 30% / 1fr 2fr 2fr 1fr;
+    border: 1px solid magenta;
+}
+
+#usr-board, #opp-board {
+    position: relative;
+    /* height:65%; */
+    /* border:1px solid orange; */
+}
+#usr-board {grid-area:usr;}
+#opp-board {grid-area:opp;}
+/* .Board {margin-top:4.5% !important;} */

@@ -4,30 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
+    <link rel="stylesheet" href="../../style.css">
+    <link rel="stylesheet" type="text/css" href="../components/board/Board.css">
     <link rel="stylesheet" href="./dashboard.css">
-    <script defer src="./dashboard.js"></script>
+    <!-- <script defer type="module" src="../../engine/utils/math.js"></script> -->
+    <script defer type="module" src="./dashboard.js"></script>
 </head>
 <body>
-    <div id="db-grid-container">
+    <main>
+        <section id="opp-board">
+            <!-- <div class="Board">
+                <header></header>
+                <aside class="left" style="grid-area:m-rows-l;"></aside>
+                <section class="Board-grid-container"></section>
+                <aside class="right" style="grid-area:m-rows-r;"></aside>
+                <footer></footer>
+            </div> -->
+        </section>
+        <section id="usr-board"></section>
+    </main>
+    <div id="db-text-overlay">
         <header id="game-status-header" class="header">User's Turn</header>
+        <div id="enemy-summray-text-overlay">summ.e</div>
+        <div id="usr-summay-text-overlay">summ.u</div>
+        <div id="enemy-ships-text-overlay">ships.e</div>
+        <div id="usr-ships-text-overlay">ships.u</div>
+        <div id="enemy-status-text-overlay">status.e</div>
+        <div id="usr-status-text-overlay">status.u</div>
+    </div>
+    <div id="db-grid-container">
         <div id="bracket-container" class="component-container">
             <div id="brkt-offence-summary" class="db-bracket left">
-                <?xml version="1.0" encoding="UTF-8"?>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1144.44 450" preserveAspectRatio="none" width="100%" height="100%">
-                    <g><path d="M1144.44,0H50C22.39,0,0,22.39,0,50v400h558.22V125c0-27.61,22.39-50,50-50h532.22V0Z"/>
-                    </g></svg>
+                    <g><path d="M1144.44,0H50C22.39,0,0,22.39,0,50v400h558.22V125c0-27.61,22.39-50,50-50h532.22V0Z"/></g>
+                </svg>
             </div>
 
             <div id="brkt-enemy-ships" class="db-bracket left"></div>
             
             <div id="brkt-enemy-stats" class="db-bracket left">
-                <?xml version="1.0" encoding="UTF-8"?>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1144.44 450" preserveAspectRatio="none" width="100%" height="100%">
                     <g><path d="M1144.44,450H50c-27.61,0-50-22.39-50-50V0h558.22v325c0,27.61,22.39,50,50,50h532.22v75Z"/>
                     </g></svg>
             </div>
             <div id="brkt-defence-summary" class="db-bracket right">
-                <?xml version="1.0" encoding="UTF-8"?>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1144.44 450" preserveAspectRatio="none" width="100%" height="100%">
                     <g><path d="M0,0h572.22s522.22,0,522.22,0c27.61,0,50,22.39,50,50v400h-558.22V125c0-27.61-22.39-50-50-50H0V0Z"/>
                     </g></svg>
@@ -36,44 +56,44 @@
             <div id="brkt-usr-ships" class="db-bracket right"></div>
 
             <div id="brkt-usr-stats" class="db-bracket right">
-                <?xml version="1.0" encoding="UTF-8"?>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1144.44 450" preserveAspectRatio="none" width="100%" height="100%">
                     <g><path d="M0,450h572.22s522.22,0,522.22,0c27.61,0,50-22.39,50-50V0s-562.22,0-558.22,0v325c0,27.61-22.39,50-50,50H0s0,75,0,75Z"/>
                     </g></svg>
             </div>
         </div>
-        <div id="db-btn-block" class="component-container">
-            <div id="attack-controls" class="left">
-                <button id="btn-fire" class="tilebtn red">Fire</button>
-                <button id="" class="tilebtn">Fire</button>
-                <button id="" class="tilebtn">Fire</button>
-                <button id="turn-timer" class="tilebtn">Fire</button>
-                <button id="" class="tilebtn">Fire</button>
-                <button id="" class="tilebtn">Fire</button>
+        <div id="db-controls-grid" class="component-container">
+            <div id="attack-controls" class="db-controls left">
+                <button id="btn-fire" class="tile-btn red">Fire</button>
+                <button id="" class="tile-btn cyan"></button>
+                <button id="turn-timer" class="tile-btn blue">00:00:00</button>
+                <button id="" class="tile-btn dblue"></button>
+                <button id="" class="tile-btn cyan"></button>
+                <button id="" class="tile-btn cyan"></button>
             </div>
             <div class="center">
-                <div class="status-list-item red">
-                    <div class="pill"></div>
-                    <p class="title">Life Support...</p>
-                    <p class="num">10%</p>
+                <div class="status-list-item">
+                    <div class="pill red"></div>
+                    <span class="title">Life Support...</span>
+                    <span class="num">10%</span>
                 </div>
-                <div class="status-list-item dblue">
-                    <div class="pill"></div>
-                    <p class="title">Patients Healed...</p>
-                    <p class="num">+6</p>
+                <div class="status-list-item">
+                    <div class="pill midnight"></div>
+                    <span class="title">Patients Healed...</span>
+                    <span class="num">+6</p>
                 </div>
-                <div class="status-list-item cyan">
-                    <div class="pill"></div>
-                    <p class="title">Shields Offline...</p>
-                    <p class="num">X</p>
+                <div class="status-list-item">
+                    <div class="pill cyan"></div>
+                    <span class="title">Shields Offline...</span>
+                    <span class="num">X</span>
                 </div>
             </div>
-            <div id="game-controls" class="right">
-                <button id="btn-full-grid" class="tilebtn red">Fire</button>
-                <button id="btn-focus-usr" class="tilebtn">Fire</button>
-                <button id="btn-pause" class="tilebtn">Fire</button>
-                <button id="btn-orient" class="tilebtn">Fire</button>
-                <button id="btn-focus-enemy" class="tilebtn">Fire</button>
+            <div id="game-controls" class="db-controls right">
+                <button id="btn-full-grid" class="tile-btn steelblue">Full Grid</button>
+                <button id="btn-focus-usr" class="tile-btn cyan">Focus User</button>
+                <button id="btn-pause" class="tile-btn blue">Pause</button>
+                <button id="btn-orient" class="tile-btn cyan">Orient</button>
+                <button id="btn-focus-enemy" class="tile-btn cyan">Focus Enemy</button>
+                <div phantom id="" class="tile-btn"></div>
             </div>
         </div>
     </div>

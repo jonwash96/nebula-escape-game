@@ -1,7 +1,24 @@
 * {
     box-sizing: border-box;
+
     --dblue: #000124;
     --steelblue: #003c5f;
     --cyan: cyan;
-    --dblue-steelblue: linear-gradient(to bottom right, var(--dblue), var(--steelblue))
+    --gold: #f9c31b;
+    --blue: #13f;
+    --midnight: #0f1e2f;
+    --red: #f00;
+
+    --dblue-steelblue: linear-gradient(to bottom right, var(--dblue), var(--steelblue));
+
+    font-family: Montserrat;
 }
+
+/* COLORWAYS */
+.red {background-color:var(--red);color:white;}
+.midnight {background-color:var(--midnight);color:white;}
+.dblue {background-color:var(--dblue);color:white;}
+.steelblue {background-color:var(--steelblue);color:white;}
+.blue {background-color:var(--blue);color:white;}
+.cyan {background-color:var(--cyan);color:var(--dblue);}
+.gold {background-color:var(--gold);}

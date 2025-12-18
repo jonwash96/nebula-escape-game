@@ -1,10 +1,10 @@
 * {
     --label-extents: 15px;
 }
-.show {display:block;}
-.hide {display:none;}
+.show2 {display:block;}
+.hide2 {display:none;}
 
-.Board {
+.Board2 {
     margin: .5em;
     position: relative;
     max-width: 100%;
@@ -20,7 +20,7 @@
     z-index:0;
 }
 
-.Board-grid-container {
+.Board-grid-container2 {
     position: relative;
     /* aspect-ratio: 1/1; */
     height: 100%;
@@ -34,14 +34,14 @@
     z-index:0;
 }
 
-.board-row {
+.board-row2 {
     margin: 0;
     padding: 0;
     z-index:0;
     position: relative;
     flex-grow: 1;
 
-    & div {
+    div {
         margin: 0;
         padding: 0;
         border: .5px solid var(--steelblue);
@@ -56,19 +56,19 @@
         color:transparent;
     }
 
-    & div:hover {
+    div:hover {
         cursor: pointer;
         background-color: #fff1;
     }
 }
 
-.Board header, .Board footer {
+.Board2 header, .Board2 footer {
     font-size: 0.5em;
     margin: 0;
     padding: 0;
     z-index:0;
 
-    & div {
+    div {
         display: inline-block;
         /* border:1px solid black; */
         width: calc(100% /26);
@@ -77,10 +77,10 @@
     }
 }
 
-.Board header {grid-area: t-rows;}
-.Board footer {grid-area: b-rows;}
+.Board2 header {grid-area: t-rows;}
+.Board2 footer {grid-area: b-rows;}
 
-.Board aside {
+.Board2 aside {
     display: flex;
     flex-direction: column;
     justify-content: space-around;
@@ -101,7 +101,7 @@
     }
 }
 
-.targeting-brackets {
+.targeting-brackets2 {
     position: absolute;
     transform: translate(-50%, -50%);
     pointer-events: none;
@@ -116,7 +116,7 @@
         width: 400px;
     }
     
-    & .bracket-node {
+    & .bracket-node2 {
         position:absolute;
         width: 100px;
         height: 40px;
@@ -130,7 +130,7 @@
     }
 }
 
-.targeting-disc {
+.targeting-disc2 {
     opacity: 0.5;
     position: absolute;
     aspect-ratio: 1/1;
@@ -140,7 +140,7 @@
     z-index:1;
 }
 
-.crosshairs {
+.crosshairs2 {
     position: absolute;
     z-index: 10;
     pointer-events: none;
@@ -148,8 +148,8 @@
     z-index:1;
 }
 
-.xhv {border-left:var(--ch-border-style);height:100%;width:0;}
-.xhh {border-top:var(--ch-border-style);width:100%;height:0;}
+.xhv2 {border-left:var(--ch-border-style);height:100%;width:0;}
+.xhh2 {border-top:var(--ch-border-style);width:100%;height:0;}
 
-.activeCell {background-color: var(--blue);}
-.committedCell{background-color: var(--midnight);}
+.activeCell2 {background-color: var(--blue);}
+.committedCell2 {background-color: var(--midnight);}

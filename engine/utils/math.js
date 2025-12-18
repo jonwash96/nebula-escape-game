@@ -8,6 +8,4 @@ function remap(value, inMin, inMax, outMin, outMax) {
   // Call: remap(x, 0, 100, 12.5, 87.5);
 }
 
-module.exports = {
-    parallax, remap,
-}
+export { parallax, remap };
