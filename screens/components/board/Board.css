@@ -1,10 +1,10 @@
 * {
     --label-extents: 15px;
 }
-.show {display:block;}
-.hide {display:none;}
+.show1 {display:block;}
+.hide1 {display:none;}
 
-.Board {
+.Board1 {
     margin: .5em;
     position: relative;
     max-width: 100%;
@@ -20,7 +20,7 @@
     z-index:0;
 }
 
-.Board-grid-container {
+.Board-grid-container1 {
     position: relative;
     /* aspect-ratio: 1/1; */
     height: 100%;
@@ -34,7 +34,7 @@
     z-index:0;
 }
 
-.board-row {
+.board-row1 {
     margin: 0;
     padding: 0;
     z-index:0;
@@ -62,7 +62,7 @@
     }
 }
 
-.Board header, .Board footer {
+.Board1 header, .Board1 footer {
     font-size: 0.5em;
     margin: 0;
     padding: 0;
@@ -77,10 +77,10 @@
     }
 }
 
-.Board header {grid-area: t-rows;}
-.Board footer {grid-area: b-rows;}
+.Board1 header {grid-area: t-rows;}
+.Board1 footer {grid-area: b-rows;}
 
-.Board aside {
+.Board1 aside {
     display: flex;
     flex-direction: column;
     justify-content: space-around;
@@ -101,7 +101,7 @@
     }
 }
 
-.targeting-brackets {
+.targeting-brackets1 {
     position: absolute;
     transform: translate(-50%, -50%);
     pointer-events: none;
@@ -116,7 +116,7 @@
         width: 400px;
     }
     
-    & .bracket-node {
+    & .bracket-node1 {
         position:absolute;
         width: 100px;
         height: 40px;
@@ -130,7 +130,7 @@
     }
 }
 
-.targeting-disc {
+.targeting-disc1 {
     opacity: 0.5;
     position: absolute;
     aspect-ratio: 1/1;
@@ -140,7 +140,7 @@
     z-index:1;
 }
 
-.crosshairs {
+.crosshairs1 {
     position: absolute;
     z-index: 10;
     pointer-events: none;
@@ -148,8 +148,8 @@
     z-index:1;
 }
 
-.xhv {border-left:var(--ch-border-style);height:100%;width:0;}
-.xhh {border-top:var(--ch-border-style);width:100%;height:0;}
+.xhv1 {border-left:var(--ch-border-style);height:100%;width:0;}
+.xhh1 {border-top:var(--ch-border-style);width:100%;height:0;}
 
-.activeCell {background-color: var(--blue);}
-.committedCell{background-color: var(--midnight);}
+.activeCell1 {background-color: var(--blue);}
+.committedCell1 {background-color: var(--midnight);}

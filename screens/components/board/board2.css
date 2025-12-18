@@ -41,7 +41,7 @@
     position: relative;
     flex-grow: 1;
 
-    div {
+    & div {
         margin: 0;
         padding: 0;
         border: .5px solid var(--steelblue);
@@ -56,7 +56,7 @@
         color:transparent;
     }
 
-    div:hover {
+    & div:hover {
         cursor: pointer;
         background-color: #fff1;
     }
@@ -68,7 +68,7 @@
     padding: 0;
     z-index:0;
 
-    div {
+    & div {
         display: inline-block;
         /* border:1px solid black; */
         width: calc(100% /26);
