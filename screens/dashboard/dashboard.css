@@ -187,5 +187,7 @@ main {
     /* border:1px solid orange; */
 }
 #usr-board {grid-area:usr;}
+#usr-board.rotate {transform:rotate(-90deg) translateY(80px);}
 #opp-board {grid-area:opp;}
+#opp-board.rotate {transform:rotate(90deg) translateY(80px);}
 /* .Board {margin-top:4.5% !important;} */

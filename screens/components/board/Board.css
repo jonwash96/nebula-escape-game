@@ -146,10 +146,10 @@
     pointer-events: none;
     --ch-border-style: 1px solid var(--gold);
     z-index:1;
+    
+    .xhv1 {border-left:var(--ch-border-style);height:100%;width:0;}
+    .xhh1 {border-top:var(--ch-border-style);width:100%;height:0;}
 }
-
-.xhv1 {border-left:var(--ch-border-style);height:100%;width:0;}
-.xhh1 {border-top:var(--ch-border-style);width:100%;height:0;}
 
 .activeCell1 {background-color: var(--blue);}
 .committedCell1 {background-color: var(--midnight);}

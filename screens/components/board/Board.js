@@ -1,11 +1,11 @@
 import { remap } from "../../../engine/utils/math.js";
 export default class Board {
-	static boardNumber = 0;
-	constructor(root, pathToModule, options) {
+	static boardNumber = 1;
+	constructor(root, targeting, options) {
         this.root = root;
-		this.pathToModule = pathToModule;
+		this.targetingSystem = targeting || null;
 		this.follow = options?.follow || true;
-		Board.boardNumber++;
+		// Board.boardNumber++;
 		console.log("Create Board number", Board.boardNumber);
 	};
 
@@ -111,7 +111,7 @@ export default class Board {
     mode(option) {
         this.status.mode = option;
         switch (option) {
-            case 'place-ships': {this.addEventListener('click', this.placeShip.bind(this))} break;
+            case 'place-ships': {this.target.addEventListener('click', this.placeShip.bind(this))} break;
         }
     }
 
@@ -146,13 +146,13 @@ export default class Board {
 	}
 
     placeShip(e, sillhouette) {
-        sillhouette = sillhouette ?? {array: [[0,1,0],[1,1,1],[0,1,0],[1,1,1],[1,0,1],[1,0,1]], width:3, offset() {return this.useOffset ? Math.floor(this.width / 2) : 0}}; // ! Tester. Remove.
+        sillhouette = sillhouette ?? {array: [[0,1,0],[1,1,1],[0,1,0],[1,1,1],[1,0,1],[1,0,1]], width:3,useOffset:true, offset() {return this.useOffset ? Math.floor(this.width / 2) : 0}}; // ! Tester. Remove.
         if (e.target.classList.contains(`cell${Board.boardNumber}`)) {
             const cell = e.target.id;
             sillhouette.array.forEach((row,i)=>{
                 row.forEach((c,k)=>{
                     const idx = (num) => String( num + ((100 * i) + (k - sillhouette.offset())) ).padStart(4,'0'); // INCREMENT 4 DIGIT CELL KEY FROM CLICKED
-                    if (c==1) cells[idx(Number(cell))].classList.add(`activeCell${Board.boardNumber}`); // ! This wil probably work differently later
+                    if (c==1) this.cells[idx(Number(cell))].classList.add(`activeCell${Board.boardNumber}`); // ! This wil probably work differently later
                 })
             })
         }

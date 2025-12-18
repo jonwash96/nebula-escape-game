@@ -3,7 +3,8 @@
 
     --dblue: #000124;
     --steelblue: #003c5f;
-    --cyan: cyan;
+    --cyan: rgb(0, 195, 255);
+    --dustycyan: rgb(100, 175, 205);
     --gold: #f9c31b;
     --blue: #13f;
     --midnight: #0f1e2f;
@@ -22,3 +23,24 @@
 .blue {background-color:var(--blue);color:white;}
 .cyan {background-color:var(--cyan);color:var(--dblue);}
 .gold {background-color:var(--gold);}
+
+nav {
+    position:absolute;
+    top:0;right:0;
+    z-index: 20;
+    background-color: black;
+    font-family: monospace;
+    border-radius: 6px;
+    padding: 5px;
+    color:white;
+
+    & a {color:white;}
+    & a:visited {color:white;}
+
+    & ul {display:none;}
+    & input:checked ~ ul {display:block;}
+    & input {display: none;}
+
+    &::before {content:"▶️";}
+    & input:checked ~ &::before {content:"🔽";}
+}
