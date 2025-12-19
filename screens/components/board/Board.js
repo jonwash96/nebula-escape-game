@@ -1,10 +1,16 @@
 import { remap } from "../../../engine/utils/math.js";
+import { ships } from "../../../game/battleship/ships.js";
+
+
 export default class Board {
 	static boardNumber = 1;
 	constructor(root, targeting, options) {
         this.root = root;
 		this.targetingSystem = targeting || null;
 		this.follow = options?.follow || true;
+		this.enableTargeting = options?.enableTargeting || false;
+		// this.#hoverCells = [];
+
 		// Board.boardNumber++;
 		console.log("Create Board number", Board.boardNumber);
 	};
@@ -18,6 +24,11 @@ export default class Board {
 	status = {
         mode:'init'
     };
+
+	// PRIVATE
+	#hoverCells = [];
+	#activeCells = [];
+	#pointerCell;
 
 	async render() { new Promise((resolve,reject) => {
 		this.root.innerHTML = `
@@ -65,13 +76,13 @@ export default class Board {
 
 		this.brackets['xpos'] = window.innerWidth / 2;
 		this.brackets['ypos'] = window.innerHeight / 2;
-		// brackets.classList.toggle('hide');
+		this.enableTargeting && this.brackets.classList.toggle(`hide${Board.boardNumber}`);
 		this.disc['xpos'] = window.innerWidth / 2;
 		this.disc['ypos'] = window.innerHeight / 2;
-		this.disc.classList.toggle(`hide${Board.boardNumber}`);
+		this.enableTargeting && this.disc.classList.toggle(`hide${Board.boardNumber}`);
 		this.crosshairV['xpos'] = window.innerWidth / 2;
 		this.crosshairH['ypos'] = window.innerHeight / 2;
-		// crosshairs.forEach(el=>el.classList.toggle('hide'));
+		this.enableTargeting && this.crosshairs.forEach(el=>el.classList.toggle(`hide${Board.boardNumber}`));
 
 		this.update();
 		resolve(console.log("done.", Board.boardNumber)) }); 
@@ -97,9 +108,8 @@ export default class Board {
 				const el = document.createElement('div');
 				let key = `${String(i + 1).padStart(2, '0')}${String(k + 1).padStart(2, '0')}`;
 				el.id = key;
-				el.classList.add(`${i + 1}${c[0]}`);
+				el.classList.add(`${c[0]}${i + 1}`);
 				el.classList.add(`cell${Board.boardNumber}`);
-				// el.textContent = `${i + 1}${c[0]}`;
 				row.appendChild(el);
 				this.cells[key] = el;
 			});
@@ -112,6 +122,7 @@ export default class Board {
         this.status.mode = option;
         switch (option) {
             case 'place-ships': {this.target.addEventListener('click', this.placeShip.bind(this))} break;
+			case 'static': {this.target.removeEventListener('click', this.placeShip.bind(this))} break;
         }
     }
 
@@ -119,6 +130,7 @@ export default class Board {
 	handleMouseMove(e) {
 		const hoverOver = document.elementsFromPoint(e.clientX,e.clientY);
 		if (this.follow && hoverOver.includes(this.target)) {
+			this.#pointerCell ?? (this.#pointerCell = hoverOver[0]);
 			this.targeting.classList.remove(`hide${Board.boardNumber}`);
 			this.targeting.classList.add(`show${Board.boardNumber}`);
 			this.brackets.xpos = remap(e.clientX, 0, window.innerWidth, window.innerWidth*0.10, window.innerWidth*0.9);
@@ -128,11 +140,13 @@ export default class Board {
 			this.crosshairV.xpos = e.clientX;
 			this.crosshairH.ypos = e.clientY;
 			this.bracketNode.textContent = hoverOver[0].classList;
-			this.update();
+			(hoverOver[0]!==this.#pointerCell) && this.hoverSillhouette(hoverOver);
 		} else if (!hoverOver.includes(Board)) {
 			this.targeting.classList.remove(`show${Board.boardNumber}`);
 			this.targeting.classList.add(`hide${Board.boardNumber}`);
+			this.cleanCellResidue && this.doCleanCellResidue();
 		}
+		this.update();
 	}
 
 	handleKeyPress(e) {
@@ -145,18 +159,68 @@ export default class Board {
     	}
 	}
 
+	hoverSillhouette(hoverOver) {
+		this.#pointerCell = hoverOver[0];
+		this.cleanCellResidue = true;
+		this.#hoverCells.forEach(h=>{ 
+			h.classList.remove(`hoverCell${Board.boardNumber}`); 
+			h.classList.remove(`impededCell${Board.boardNumber}`) 
+		});
+		this.#activeCells.forEach(a=>a.classList.remove(`impededCell${Board.boardNumber}`));
+		this.#hoverCells = [];
+		const ship = ships.starfleet.enterprise;
+		let cell = hoverOver[0].id;
+		ship.sillhouette.forEach((row,i)=>{
+			row.forEach((c,k)=>{
+				const idx = (num) => String( num + ((100 * i) + (k - ship.offset())) ).padStart(4,'0'); // INCREMENT 4 DIGIT CELL KEY FROM CLICKED
+				if (c==1) {
+					const alter = this.cells[idx(Number(cell))];
+					// console.log(alter)
+					try {
+					if (alter.classList.contains(`committedCell${Board.boardNumber}`)) {
+						alter.classList.add(`impededCell${Board.boardNumber}`)
+					} else {
+						alter.classList.add(`hoverCell${Board.boardNumber}`);
+						this.#hoverCells.push(alter);
+					}} catch (err) {this.#hoverCells.forEach(c=>c.classList.add(`impededCell${Board.boardNumber}`));}
+				};
+			})
+		});
+	}
+
     placeShip(e, sillhouette) {
+		this.#hoverCells = [];
+		let alter;
+		const stagedCells = [];
         sillhouette = sillhouette ?? {array: [[0,1,0],[1,1,1],[0,1,0],[1,1,1],[1,0,1],[1,0,1]], width:3,useOffset:true, offset() {return this.useOffset ? Math.floor(this.width / 2) : 0}}; // ! Tester. Remove.
         if (e.target.classList.contains(`cell${Board.boardNumber}`)) {
             const cell = e.target.id;
             sillhouette.array.forEach((row,i)=>{
                 row.forEach((c,k)=>{
                     const idx = (num) => String( num + ((100 * i) + (k - sillhouette.offset())) ).padStart(4,'0'); // INCREMENT 4 DIGIT CELL KEY FROM CLICKED
-                    if (c==1) this.cells[idx(Number(cell))].classList.add(`activeCell${Board.boardNumber}`); // ! This wil probably work differently later
+                    if (c==1) {
+						alter = this.cells[idx(Number(cell))];
+						if (alter.classList.contains(`committedCell${Board.boardNumber}`)) {
+							alter.classList.add(`forbiddenCell${Board.boardNumber}`)
+							stagedCells.push(alter);
+						} else {
+							console.log("+active", alter); //!
+							stagedCells.push(alter);
+						}
+					};
                 })
             })
-        }
-    }
+		};
+		if (stagedCells.every(c=>!c.classList.contains(`forbiddenCell${Board.boardNumber}`))) {
+			stagedCells.forEach(c=>c.classList.add(`committedCell${Board.boardNumber}`));
+			console.log("Cells Pushed!", stagedCells);this.#activeCells.push(...stagedCells); //!
+		} else {console.log("Cells Rejected!",stagedCells.some(c=>c.classList.contains(`forbiddenCell${Board.boardNumber}`)))}; //!
+		stagedCells.forEach(c=>{
+			c.classList.remove(`forbiddenCell${Board.boardNumber}`);
+			c.classList.remove(`impededCell${Board.boardNumber}`);
+			c.classList.remove(`hoverCell${Board.boardNumber}`)
+		});
+	}
 
     update() {
         this.brackets.style.left = this.brackets.xpos + 'px';
@@ -167,4 +231,10 @@ export default class Board {
         this.crosshairH.style.top = this.disc.ypos + 'px';
     }
 
+	cleanCellResidue = false
+	doCleanCellResidue() { Object.values(this.cells).forEach(c => {
+		c.classList.contains(`impededCell${Board.boardNumber}`) && c.classList.remove(`impededCell${Board.boardNumber}`);
+		c.classList.contains(`hoverCell${Board.boardNumber}`) && c.classList.remove(`hoverCell${Board.boardNumber}`);
+		this.cleanCellResidue = false;
+	})};
 };

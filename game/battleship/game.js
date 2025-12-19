@@ -1,35 +1,23 @@
-// PLACE SHIPS
-game.status.mode('place-ships');
-Board.placeShips();
-     // ship.onclick()
-    const placement = Board.placeShips(sillhouette) // that was clicked. Returns array [head,[...cells]]
-    // select next & repeat
 
-shipsPanel.addEventListener('click', (e) => {
-    const hoverOver = document.elementsFromPoint(e.clientX,e.clientY);
-    if (e.target.classList.includes('ship')) {
-        const projection = ships[e.target.id].projection
-        if (!activeProjection) {
-            projection.addEventListener('mousemove',handleMouseMove);
-            projection.classlist.replace('hide','show');
-        } else {
-            switch (e.target.id) {
-                case 'board': {board.placeShip(e)} break;
-                case 'db-brkt-usr-ships': {
-                    projection.classlist.replace('show','hide');
-                    projection.removeEventListener('mousemove',handleMouseMove);
-                    /* reset its position */
-                } break;
-
-            }
-        } // ! finish this
-        
+export class Game {
+    constructor(config,players) {
+        if (config.players===1) {
+            this.p1 = new Bot();
+            this.p2 = new Player(players[0]);
+            this.gamekey = players[0].gamekey;
+            this.mode = intro;
+            this.currentPlayer = this.p1;
+        }
     }
-})
 
-handleMouseMove(e) {
-	const hoverOver = document.elementsFromPoint(e.clientX,e.clientY);
-    const projection = player.ships[e.target.dataset.ship].projection
-        ship.projection.xpos = e.clientX;
-		ship.projection.ypos = e.clientY;
+    // OPERATION
+    placeShips() {
+        this.mode = 'place-ships';
+        this.player.board.mode('place-ships');
+        this.dashboard.mode('place-ships');
+        this.dashboard[currentPlayer].shipsPanel.addEventListener('click', this.dashboard.selectShips.bind(dashboard));
+        this.dashboard.ships.forEach(s=>s.classList.add('clickable'));
+    }
 }
+
+// PLACE SHIPS
