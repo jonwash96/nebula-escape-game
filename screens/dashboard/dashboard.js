@@ -1,6 +1,7 @@
 import Board from "../components/board/Board.js";
 import { config } from "../../game/battleship/config.js";
 import { remap } from "../../../engine/utils/math.js";
+import { ships } from "../../../game/battleship/ships.js";
 
 const targetingSystem = document.getElementById('load-targeting-System');
 let activeProjection;
@@ -17,12 +18,12 @@ const dashboard = {
                 if (!activeProjection) {
                     activeProjection = projection;
                     projection.addEventListener('mousemove',handleMouseMove);
-                    projection.classlist.replace('hide','show');
-                    projection.classlist.add('project');
+                    projection.classList.replace('hide','show');
+                    projection.classList.add('project');
                 } else {
-                    activeProjection.classlist.replace('show','hide');
+                    activeProjection.classList.replace('show','hide');
                     activeProjection.removeEventListener('mousemove',handleMouseMove);
-                    activeProjection.classlist.remove('project');
+                    activeProjection.classList.remove('project');
                     activeProjection = null;
                 }
             }
@@ -49,18 +50,22 @@ const dashboard = {
         },
         placeShips(e) {
             if (e.target.classList.contains('ship')) {
-                const projection = dashboard.projections[e.target.id];
+                console.log(ships.starfleet[e.target.id]); //!
+                const projection = dashboard.p2.projections[e.target.id];
                 if (!activeProjection) {
                     activeProjection = projection;
                     projection.addEventListener('mousemove',handleMouseMove);
-                    projection.classlist.replace('hide','show');
-                    projection.classlist.add('project');
+                    projection.classList.replace('hide','show');
+                    projection.classList.add('project');
                 } else {
-                    activeProjection.classlist.replace('show','hide');
+                    activeProjection.classList.replace('show','hide');
                     activeProjection.removeEventListener('mousemove',handleMouseMove);
-                    activeProjection.classlist.remove('project');
+                    activeProjection.classList.remove('project');
                     activeProjection = null;
                 }
+                // this.board.setShipToPlace(player2.ships[e.target.id]);
+                // const send = ships.starfleet[e.target.id];
+                dashboard.p2.board.setShipToPlace(ships.starfleet[e.target.id]);
             }
         }
     },
@@ -115,17 +120,17 @@ async function init() {
     
     dashboard.buttons.switchUser.addEventListener('click',()=>p2.board.mode('static'));
     dashboard.buttons.switchUser.textContent = 'done';
-    dashboard.buttons.orient.addEventListener('click', e=>dashboard.p2.boardEl.classList.toggle('rotate'));
+    dashboard.buttons.orient.addEventListener('click', (e)=>dashboard.p2.boardEl.classList.toggle('rotate'));
     dashboard.buttons.orient.classList.add('clickable');
     dashboard.buttons.switchUser.classList.add('clickable');
 
     dashboard.p2.board.mode('place-ships');
-    dashboard['p2'].shipsPanel.addEventListener('click', dashboard.p2.placeShips);
+    dashboard.p2.shipsPanel.addEventListener('click', dashboard.p2.placeShips); //!
     Object.values(dashboard.p2.ships).forEach(s=>s.classList.add('clickable'));
 
     document.addEventListener('mousemove',(e)=>{
         const elements = document.elementsFromPoint(e.clientX,e.clientY);
-        // console.log(elements);
+        // console.log(elements)//!
         if (elements.includes(dashboard.p2.shipsPanel)) {
             document.querySelector('main').style.pointerEvents = 'none';
         } else {document.querySelector('main').style.pointerEvents = 'all';}

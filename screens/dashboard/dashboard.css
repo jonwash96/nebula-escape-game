@@ -9,6 +9,8 @@ body {
 }
 
 .clickable:hover {cursor:pointer;}
+.show {display:block;}
+.hide {display:none;}
 
 main {
     pointer-events: all;
@@ -25,13 +27,22 @@ main {
 
     #p2-board, #p1-board {
         position: relative;
-        border:1px solid orange;
+        /* border:1px solid orange; */
     }
     #p2-board {grid-area:p2;}
     #p2-board.rotate {transform:rotate(-90deg) translateY(80px);}
     #p1-board {grid-area:p1;}
     #p1-board.rotate {transform:rotate(90deg) translateY(80px);}
     /* .Board {margin-top:4.5% !important;} */
+}
+@media screen and (max-width: 1530px) {
+    #p1-board {display:none;}
+    main {
+        grid-template: 
+        ". . ." 8%
+        ". p2 . " 60%
+        ". . . " 30% / 1fr 2fr 1fr;
+    }
 }
 
 #db-text-overlay {
@@ -122,9 +133,6 @@ main {
     grid-template-rows: 80% auto;
 
 }
-
-.show {display:block;}
-.hide {display:none;}
 
 #bracket-container {
     display: relative;
