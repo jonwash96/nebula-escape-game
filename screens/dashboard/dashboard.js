@@ -124,7 +124,11 @@ async function init() {
     Object.values(dashboard.p2.ships).forEach(s=>s.classList.add('clickable'));
 
     document.addEventListener('mousemove',(e)=>{
-        console.log(document.elementsFromPoint(e.clientX,e.clientY));
+        const elements = document.elementsFromPoint(e.clientX,e.clientY);
+        // console.log(elements);
+        if (elements.includes(dashboard.p2.shipsPanel)) {
+            document.querySelector('main').style.pointerEvents = 'none';
+        } else {document.querySelector('main').style.pointerEvents = 'all';}
     });
 
 }; await init();
