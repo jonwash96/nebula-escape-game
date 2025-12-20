@@ -2,6 +2,7 @@ import Board from "../components/board/Board.js";
 import { config } from "../../game/battleship/config.js";
 import { remap } from "../../../engine/utils/math.js";
 import { ships } from "../../../game/battleship/ships.js";
+import { nav } from "../../nav_dev.js";nav();
 
 const targetingSystem = document.getElementById('load-targeting-System');
 let activeProjection;
@@ -25,7 +26,7 @@ const dashboard = {
                     activeProjection.removeEventListener('mousemove',handleMouseMove);
                     activeProjection.classList.remove('project');
                     activeProjection = null;
-                }
+                } 
             }
         }
     },

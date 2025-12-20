@@ -44,7 +44,7 @@ function userSetupManager(e) {
         localStorage.set(newUser.username, newUser);
     };
 
-    sessionStorage.set(userConfig.name, userConfig);
+    sessionStorage.set('player', userConfig);
 
-    const player = new Player(userConfig)
+    const player = new Player(userConfig);
 }

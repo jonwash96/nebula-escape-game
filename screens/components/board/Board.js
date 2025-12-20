@@ -110,7 +110,7 @@ export default class Board {
 				const el = document.createElement('div');
 				let key = `${String(i + 1).padStart(2, '0')}${String(k + 1).padStart(2, '0')}`;
 				el.id = key;
-				el.classList.add(`${c[0]}${i + 1}`);
+				el.classList.add(`${Board.colRow[i][0]}${c[1]}`);
 				el.classList.add(`cell${Board.boardNumber}`);
 				row.appendChild(el);
 				this.cells[key] = el;
@@ -240,7 +240,7 @@ export default class Board {
         this.crosshairH.style.top = this.disc.ypos + 'px';
     }
 
-	cleanCellResidue = false
+	cleanCellResidue = false;
 	doCleanCellResidue() { Object.values(this.cells).forEach(c => {
 		c.classList.contains(`impededCell${Board.boardNumber}`) && c.classList.remove(`impededCell${Board.boardNumber}`);
 		c.classList.contains(`hoverCell${Board.boardNumber}`) && c.classList.remove(`hoverCell${Board.boardNumber}`);

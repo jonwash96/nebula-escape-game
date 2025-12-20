@@ -23,7 +23,7 @@
 .Board-grid-container1 {
     position: relative;
     /* aspect-ratio: 1/1; */
-    height: 100%;
+    height: 100%; 
     grid-area: m-board;
     border: 4px solid var(--cyan);
     border-radius: 6px;
@@ -55,6 +55,7 @@
         vertical-align: middle;
         color:transparent;
     }
+    line-height: 0;
 
     & div:hover {
         cursor: pointer;
