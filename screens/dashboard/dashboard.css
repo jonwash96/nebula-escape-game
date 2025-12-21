@@ -33,13 +33,13 @@ main {
     #p2-board.rotate {transform:rotate(-90deg) translateY(80px);}
     #p1-board {grid-area:p1;}
     #p1-board.rotate {transform:rotate(90deg) translateY(80px);}
-    /* .Board {margin-top:4.5% !important;} */
+    /* .Board {margin:0 auto!important;} */
 }
 @media screen and (max-width: 1530px) {
     #p1-board {display:none;}
     main {
         grid-template: 
-        ". . ." 8%
+        ". . ." 10%
         ". p2 . " 60%
         ". . . " 30% / 1fr 2fr 1fr;
     }
@@ -146,6 +146,7 @@ main {
     "p1-summary p1-summary . p2-summary p2-summary"
     "p1-ships board board board p2-ships"
     "p1-status p1-status . p2-status p2-status";
+    opacity:50%;
 
 
 }
