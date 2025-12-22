@@ -5,10 +5,11 @@
 .hide {display:none;}
 
 .Board {
-    margin: .5em;
+    /* margin: .5em; */
+    margin:0 auto!important;
     position: relative;
     max-width: 100%;
-    max-height: 95%;
+    max-height: 100%;
     aspect-ratio: 1/1;
     display: grid;
     grid-template:
@@ -58,8 +59,8 @@
     }
     line-height: 0;
 
+    &:hover {cursor: cell;}
     & .hover-cell:hover {
-        /* cursor: pointer; */
         background-color: #fff1;
     }
 }

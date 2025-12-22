@@ -1,7 +1,7 @@
-import Board from "../components/board/Board.js";
-import { config } from "../../game/battleship/config.js";
+import Board from "../../components/board/Board.js";
+import { config } from "../../game/config.js";
 import { remap } from "../../../engine/utils/math.js";
-import { ships } from "../../../game/battleship/ships.js";
+import { ships } from "../../../game/ships.js";
 import { nav } from "../../nav_dev.js";nav();
 
 const targetingSystem = document.getElementById('load-targeting-System');
@@ -30,8 +30,6 @@ const p1 = {
         }
     }
 }
-const allShips = Object.values(ships.starfleet);
-const iterator = 0;
 
 const p2 = {
     boardEl: document.getElementById('p2-board'),
@@ -150,8 +148,16 @@ async function init() {
 
 }; await init();
 
-function testSend() {
-    		new Promise((resolve) => {
-            console.log(p2.board.setShipToPlace(ships.starfleet.lasirena,resolve))
-		})
-} testSend()
+async function loadShips() {
+    const allShips = Object.values(ships.enemy);
+    for (let i = 0; i < allShips.length; i++) {
+        console.log("ITERATOR", i, "allShips", allShips.length)
+        await new Promise((resolve) => {
+            setTimeout(()=>p2.board.setShipToPlace(allShips[i],resolve), 50);
+        });
+        console.log("Ship's placement location", allShips[i]);
+    }
+    p2.board.mode('static');
+    console.log("All Ships Placed. Awaiting enemy place ships.")
+
+} await loadShips()
