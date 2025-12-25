@@ -112,7 +112,6 @@
 
 .targeting-brackets {
     position: absolute;
-    /* transform: translate(-130%, -98%); */
     transform: translate(-130%, -98%);
     pointer-events: none;
     /* border: 1px solid red; */
@@ -138,6 +137,8 @@
         padding-left:.3em;
         font-size: 11pt;
     }
+
+    &.right-shift {transform: translateX(2%);}
 }
 
 .targeting-disc {

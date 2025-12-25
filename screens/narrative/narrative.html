@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prompt</title>
+    <script defer type="module" src="./narrative.js"></script>
+    <link rel="stylesheet" href="./narrative.css">
+    <link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+    <main id="prompt-wrapper">
+        <div id="button-col">
+            <div><div id="back-to-bridge" class="easter"></div><div id="goto-intro" title="goto-intro" class="cyan goto"></div></div>
+            <div><div class="cyan"></div><div id="goto-part1" title="goto-part1" class="red goto"></div></div>
+            <div><div class="steelblue"></div><div id="goto-part2" title="goto-part2" class="steelblue goto"></div></div>
+            <div><div id="new-outcome" class="red easter"></div><div id="goto-part3" title="goto-part3" class="cyan goto"></div></div>
+            <div><div></div><div id="goto-part4" title="goto-part4 goto" class="goto"></div></div>
+            <div><div class="cyan"></div><div id="goto-part5" title="goto-part5" class="cyan goto"></div></div>
+            <div><div class="steelblue"></div><div id="goto-part6" title="goto-part6" class="goto"></div></div>
+            <div><div class="cyan"></div><div></div></div>
+            <div><div></div><div id="reset-storage" class="red easter" title="reset-storage"></div></div>
+            <div><div id="toggle-dev-mode-1" class="cyan"></div><div id="toggle-dev-mode-2"></div></div>
+        </div>
+        <div id="content">
+            <section id="prompt-text">
+                <h1></h1>
+                <h2></h2>
+                <p></p>
+            </section>
+            <form id="prompt-response">
+                <img src="" />
+                <h3>What Do You Do?</h3>
+                <ul id="prompt-options"></ul>
+                <button type="button" id="continue" class="tile-btn dblue">Continue</button>
+            </form>
+        </div>
+    </main>
+</body>
+</html>

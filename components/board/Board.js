@@ -6,33 +6,31 @@ export default class Board {
 	static boardNumber = 0;
 	constructor(root, targeting, options) {
         this.root = root;
-		this.targetingSystem = targeting || null;
-		this.follow = options?.follow || true;
+		this.follow = options?.follow || false;
 		this.enableTargeting = options?.enableTargeting || false;
-		// this.#hoverCells = [];
 		Board.boardNumber++;
+		this.boardNumber = Board.boardNumber;
+		this.shipToPlace = null;
 	};
 
 
     // STATIC
 	static colRow = [['A', 1], ['B', 2], ['C', 3], ['D', 4], ['E', 5], ['F', 6], ['G', 7], ['H', 8], ['I', 9], ['J', 10], ['K', 11], ['L', 12], ['M', 13], ['N', 14], ['O', 15], ['P', 16], ['Q', 17], ['R', 18], ['S', 19], ['T', 20], ['U', 21], ['V', 22], ['W', 23], ['X', 24], ['Y', 25], ['Z', 26]];
 	
-	// PUBLUC
+	// OBJ
 	cells = {};
 	placedShips = {};
-	status = {
-        mode:'init'
-    };
+	status = {mode:'init'};
 
-	// PRIVATE
-	#hoverCells = [];
-	#activeCells = [];
-	#pointerCell;
-	#shipToPlace;
-	#donePlacingShip;
-	#shipRotation = 90;
-	
+	// VAR
+	hoverCells = [];
+	activeCells = [];
+	pointerCell;
+	shipToPlace;
+	donePlacingShip;
+	shipRotation = 0;
 
+	// INIT
 	async render() { new Promise((resolve,reject) => {
 		this.root.innerHTML = `
 		<section class="targeting-system">
@@ -56,7 +54,7 @@ export default class Board {
 			<footer></footer>
 		</div>`;
 
-		// INIT
+		// (INIT)
 		this.target = this.root.querySelector(`.Board`);
 		this.container = this.root.querySelector(`.Board-grid-container`);
 		this.header = this.root.querySelector(`.Board header`);
@@ -79,17 +77,20 @@ export default class Board {
 
 		this.brackets['xpos'] = window.innerWidth / 2;
 		this.brackets['ypos'] = window.innerHeight / 2;
-		// this.bracketNode.innerHTML = `${this.brackets.xpos},${this.brackets.ypos}`;
-		this.enableTargeting && this.brackets.classList.toggle('hide');
+		this.bracketNode.innerHTML = `${this.brackets.xpos},${this.brackets.ypos}`;
 		this.disc['xpos'] = window.innerWidth / 2; 
 		this.disc['ypos'] = window.innerHeight / 2;
-		this.enableTargeting && this.disc.classList.toggle('hide');
 		this.crosshairV['xpos'] = window.innerWidth / 2;
 		this.crosshairH['ypos'] = window.innerHeight / 2;
-		this.enableTargeting && this.crosshairs.forEach(el=>el.classList.toggle('hide'));
+
+		if (this.enableTargeting) {
+			this.brackets.classList.toggle('hide');
+			this.disc.classList.toggle('hide');
+			this.crosshairs.forEach(el=>el.classList.toggle('hide'));
+		}
 
 		this.update();
-		resolve(console.log("Create Board number", Board.boardNumber)) }); 
+		resolve(console.log("Create Board number", this.boardNumber)) }); 
 	}
 
 	createBoard() {
@@ -124,10 +125,11 @@ export default class Board {
     // METHODS
     mode(option) {
         option && (this.status.mode = option);
+		console.log("Board "+this.boardNumber+" Mode Set:", option);
         switch (option) {
             case 'place-ships': {
 				this.target.addEventListener('click', this.placeShip.bind(this));
-				this.brackets.classList.remove('hide');
+				this.targetingEnabled && this.brackets.classList.remove('hide');
 				this.target.querySelectorAll('.board-row div').forEach(el=>el.classList.remove('.hover-cell'));
 			} break;
 			case 'targeting': {this.follow = true; this.disc.classList.remove('hide');this.crosshairs.forEach(el=>el.classList.remove('hide'))} break;
@@ -144,19 +146,21 @@ export default class Board {
 	// EVENT HANDLERS
 	handleMouseMove(e) {
 		const hoverOver = document.elementsFromPoint(e.clientX,e.clientY);
-		if (this.follow && hoverOver.includes(this.target)) {
-			this.#pointerCell ?? (this.#pointerCell = hoverOver[0]);
-			this.targeting.classList.remove('hide');
-			this.disc.xpos = e.clientX;
-			this.disc.ypos = e.clientY;
-			this.crosshairV.xpos = e.clientX;
-			this.crosshairH.ypos = e.clientY;
-			this.bracketNode.innerHTML = hoverOver[0].classList[0]; /*`M:${e.clientX},${e.clientY}<br>B:${this.brackets.xpos},${this.brackets.ypos}`;*/
+		if (hoverOver.includes(this.target)) {
+			if (this.follow) {
+				this.pointerCell ?? (this.pointerCell = hoverOver[0]);
+				this.targeting.classList.remove('hide');
+				this.disc.xpos = e.clientX;
+				this.disc.ypos = e.clientY;
+				this.crosshairV.xpos = e.clientX;
+				this.crosshairH.ypos = e.clientY;
+				this.bracketNode.innerHTML = hoverOver[0].classList[0]; /*`M:${e.clientX},${e.clientY}<br>B:${this.brackets.xpos},${this.brackets.ypos}`;*/
+			};
 			if (this.mode() === 'place-ships') {
-				if (this.#shipToPlace && hoverOver[0]!==this.#pointerCell) this.hoverSillhouette(hoverOver);
+				if (this.shipToPlace && hoverOver[0]!==this.pointerCell) this.hoverSillhouette(hoverOver);
 				this.brackets.xpos = remap(e.clientX, 0, window.innerWidth, window.innerWidth*0.15, window.innerWidth*0.85);
 				this.brackets.ypos = remap(e.clientY, -150, window.innerHeight, window.innerHeight*0.2, window.innerHeight*0.85);
-			}
+			};
 		} else if (!hoverOver.includes(Board)) {
 			this.targeting.classList.add('hide');
 			this.cleanCellResidue && this.doCleanCellResidue();
@@ -171,8 +175,8 @@ export default class Board {
 			case 'c': {this.crosshairs.forEach(el=>el.classList.toggle('hide'))} break;
 			case 'b': {this.brackets.classList.toggle('hide')} break;
 			case 'd': {this.disc.classList.toggle('hide')} break;
-			case 'r': {this.#shipRotation += 90; this.#shipRotation > 270 && (this.#shipRotation = 0)} break;
-			case 'x': {if (this.mode()==='place-ships') {this.#shipToPlace = null; this.doCleanCellResidue()}} break;
+			case 'r': {this.shipRotation -= 90; this.shipRotation < 0 && (this.shipRotation = 360)} break;
+			case 'x': {if (this.mode()==='place-ships') {this.shipToPlace = null; this.doCleanCellResidue()}} break;
 		}
 	}
 
@@ -187,73 +191,83 @@ export default class Board {
 	}
 
 	hoverSillhouette(hoverOver) {
-		this.#pointerCell = hoverOver[0];
+		this.pointerCell = hoverOver[0];
 		this.cleanCellResidue = true;
-		this.#hoverCells.forEach(h=>{ 
+		this.hoverCells.forEach(h=>{ 
 			h.classList.remove(`hoverCell`); 
 			h.classList.remove(`impededCell`);
 		});
-		this.#activeCells.forEach(a=>a.classList.remove(`impededCell`));
-		this.#hoverCells = [];
-		const ship = this.#shipToPlace;
+		this.activeCells.forEach(a=>a.classList.remove(`impededCell`));
+		this.hoverCells = [];
+		const ship = this.shipToPlace;
+		try {hoverOver[0].id} catch (err) {console.trace("What is: cell? (Board: 203)",hoverOver)};
 		let cell = hoverOver[0].id;
-		this.#shipToPlace.sillhouette.forEach((row,i)=>{
+		// console.log("What is: this?",this);
+		// console.log("What is: shipToPlace?", Object.values(this)[6]);
+		this.shipToPlace.sillhouette.forEach((row,i)=> {
 			row.forEach((c,k)=>{
 				if (c==1) {
-					const alter = this.cells[this.cast(this.#shipToPlace, Number(cell), this.#shipRotation, i,k)];
+					const alter = this.cells[this.cast(this.shipToPlace, Number(cell), this.shipRotation, i,k)];
 					try {
 					if (alter.classList.contains(`committedCell`)) {
 						alter.classList.add(`impededCell`)
+						this.hoverCells.push(alter)
 					} else {
 						alter.classList.add(`hoverCell`);
-						this.#hoverCells.push(alter);
-					}} catch (err) {this.#hoverCells.forEach(c=>c.classList.add(`impededCell`));}
+						this.hoverCells.push(alter);
+					}} catch (err) {this.hoverCells.forEach(c=>c.classList.add(`impededCell`));}
 				};
 			})
 		});
+		return(this.hoverCells);
 	}
 
-	setShipToPlace(ship,resolve) {this.#shipToPlace = ship; 
+	setShipToPlace(ship,resolve,reject) {
+		this.shipToPlace = ship; 
 		console.log("ship recieved:", ship);
-		this.#donePlacingShip = resolve;
+		this.donePlacingShip = resolve;
+		this.errorPlacingShip = reject;
 	}
 
     placeShip(e) {
-		if (!this.#shipToPlace) return;
-		let ship = this.#shipToPlace;
+		if (!this.shipToPlace) return;
+		let ship = this.shipToPlace;
 		const stagedCells = [];
 		let alter;
 		if (e.target.classList.contains(`cell`)) {
             const cell = e.target.id;
-            ship.sillhouette.forEach((row,i)=>{
+            ship.sillhouette.forEach((row,i) => {
                 row.forEach((c,k)=>{
                     if (c==1) {
-						alter = this.cells[this.cast(ship, Number(cell), this.#shipRotation, i,k)];
-						if (alter.classList.contains(`committedCell`)) {
-							alter.classList.add(`forbiddenCell`)
-							stagedCells.push(alter);
-						} else {
-							stagedCells.push(alter);
+						alter = this.cells[this.cast(ship, Number(cell), this.shipRotation, i,k)];
+						try {
+							if (alter.classList.contains(`committedCell`)) {
+								alter.classList.add(`forbiddenCell`)
+								stagedCells.push(alter);
+							} else {
+								stagedCells.push(alter);
+							}
+						} catch (err) {
+							throw new Error("Out of bounds!"+alter); 
 						}
 					};
                 })
             })
 		};
-		if (stagedCells.every(c=>!c.classList.contains(`forbiddenCell`))) {
+		if (stagedCells.length > 1 && stagedCells.every(c=>!c.classList.contains(`forbiddenCell`))) {
 			stagedCells.forEach(c=>c.classList.add(`committedCell`));
 			console.log("Cells Pushed!", stagedCells); //!
-			this.#activeCells.push(...stagedCells); 
-			this.#shipToPlace['location'] = [e.target.id,stagedCells];
-			this.placedShips[this.#shipToPlace.name] = this.#shipToPlace;
-
-			this.#shipToPlace = null;
-			this.#donePlacingShip();
-		} else {console.log("Cells Rejected!",stagedCells.some(c=>c.classList.contains(`forbiddenCell`)))}; //!
-		stagedCells.forEach(c=>{
-			c.classList.remove(`forbiddenCell`);
-			c.classList.remove(`impededCell`);
-			c.classList.remove(`hoverCell`)
-		});
+			this.activeCells.push(...stagedCells); 
+			this.shipToPlace['location'] = [e.target.id, stagedCells];
+			this.placedShips[this.shipToPlace.name] = this.shipToPlace;
+			this.shipToPlace = null;
+			this.donePlacingShip();
+			return true;
+		} else {
+			console.log("Cells Rejected!",stagedCells.some(c=>c.classList.contains(`forbiddenCell`))); 
+			this.errorPlacingShip()
+		}; //!
+		this.doCleanCellResidue()
 	}
 
     update() {
@@ -270,5 +284,7 @@ export default class Board {
 		c.classList.contains(`impededCell`) && c.classList.remove(`impededCell`);
 		c.classList.contains(`hoverCell`) && c.classList.remove(`hoverCell`);
 		this.cleanCellResidue = false;
-	})};
+	})
+	// this.render()
+	};
 };

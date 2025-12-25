@@ -2,8 +2,8 @@ body {
     margin:0;
     background: var(--dblue);
     background-size:cover;
-    width:100wv;
-    height:100hv;
+    width:100vw;
+    height:100vh;
     color:white;
     overflow: none;
 }
@@ -21,7 +21,7 @@ main {
     display: grid;
     grid-template: 
         ". . . ." 10%
-        ". p1 p2 . " auto
+        ". p1 p2 . " 60%
         ". . . . " 30% / 1fr 2fr 2fr 1fr;
     /* border: 1px solid magenta; */
 
@@ -29,13 +29,15 @@ main {
         position: relative;
         /* border:1px solid orange; */
     }
-    #p2-board {grid-area:p2;}
-    #p2-board.rotate {transform:rotate(-90deg) translateY(80px);}
     #p1-board {grid-area:p1;}
-    #p1-board.rotate {transform:rotate(90deg) translateY(80px);}
+    #p2-board {grid-area:p2;}
+
+    .rotate {scale: 90%;}
+    #p1-board.rotate {transform:rotate(90deg) translateY(-20px);}
+    #p2-board.rotate {transform:rotate(-90deg) translateY(-20px);}
 }
-@media screen and (max-width: 1530px) {
-    #p1-board {display:none;}
+@media screen and (max-width: 1190px) {
+    .active-board {display:grid;}
     main {
         grid-template: 
         ". . ." 9%
@@ -49,14 +51,14 @@ main {
     position: absolute;
     inset:0;
     width: 100vw;
-    height: 78vh;
+    height: 77vh;
     z-index: 2;
     margin-top:15px;
     padding:0 1%;
     /* border: 1px solid magenta; */
     display: grid block;
     grid-template-columns: 15% 13% auto 13% 15%;
-    grid-template-rows: calc(50px - 1em) calc(30% - 50px) 36% 30%;
+    grid-template-rows: calc((50px - 1em) * 0.8) calc(31% - 50px) 36% 30%;
     gap: 1em 2em;
     grid-template-areas: 
         ". . header . . "
@@ -69,48 +71,114 @@ main {
         font-size: 32pt;
     }
 
-    #p1-summaryy-text-overlay {grid-area:p1-summary;}
-    #p1-ships-text-overlay {grid-area:p1-ships;}
+    #p1-summary-text-overlay {grid-area:p1-summary;}
     #p1-status-text-overlay {grid-area:p1-status;}
+
+    #p1-ships-text-overlay {
+        grid-area:p1-ships;
+        text-align: left;
+
+        & .ships {
+            display: grid;
+            grid-template: 25% 23% 22% 15% 15% / auto;
+            height: 98%;
+            /* border: 1px solid violet; */
+
+            & svg.brkt-placed-ship {opacity:0.5;}
+            & svg {
+                fill: var(--dblue);
+                height:100%;
+                pointer-events: none;
+            }
+        }
+
+        & .ships.enemy {
+            #borgCube-svg {height:100%;}
+            #capitalShip-svg {height:100%;}
+            #bird-of-prey-svg {height:100%;}
+            #mars-shuttle-svg {height:95%;}
+            #snakehead-svg {height:80%;}
+        }
+        
+        & .ships.starfleet {
+            /* display: grid;
+            grid-template: 25% 23% 22% 15% 15% / auto;
+            gap:.5em;
+            height: 98%; */
+            
+            & .ship svg {rotate: 180deg;}
+            #enterprise-svg {height:100%;}
+            #titan-svg {height:100%;}
+            #wallenberg-svg {height:100%;}
+            #lasirena-svg {height:90%;}
+            #shuttle-svg {height:80%;}
+        }
+        
+        & #p1-ships-btn {transform:translate(5.5vw, -130%);}
+    }
+
+    @media screen and (min-width: 1700px) {
+        #p1-ships-text-overlay {
+            grid-area:p1-ships;
+
+            & .ships.enemy {
+                display: flex;
+                flex-direction: row;
+                justify-content: flex-start;
+                align-items: flex-start;
+                flex-wrap: wrap;
+                height: 98%;
+                /* border: 1px solid violet; */
+
+                & .ship {max-width:100px;}
+
+                #borgCube {width:100px;}
+                #capitalShip {width:80px;}
+                #bird-of-prey {width:60%;}
+                #mars-shuttle {width:45%;}
+                #snakehead {width:40%;}
+            }
+
+            & #p1-ships-btn {transform:translate(128px, -130%);}
+        }
+    }
+
     #p2-summary-text-overlay {grid-area:p2-summary;text-align: right;}
+    #p2-status-text-overlay {grid-area:p2-status;text-align: right;}
 
     #p2-ships-text-overlay {
         grid-area:p2-ships;
         text-align: right;
 
-        & div {
-            padding:1em;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap:.5em;
-            max-height: 100%;
-            border: 1px solid violet;
+        & .ships {
+            display: grid;
+            grid-template: 25% 23% 22% 15% 15% / auto;
+            height: 98%;
+            /* border: 1px solid violet; */
+            
+            & svg.brkt-placed-ship {opacity:0.5;}
+            & svg {
+                fill:var(--dblue);
+                height:100%; 
+                pointer-events: none;
+            }
 
-            /* & svg {border:1px solid var(--midnight);} */
-            #enterprise, #enterprise-projection {width:80%;aspect-ratio: 2/1.5;}
-            #titan, #titan-projection {width:60%;aspect-ratio: 2/1.5;}
-            #wallenberg, #wallenberg-projection {width:40%;aspect-ratio: 2/1.8;}
-            #lasirena, #lasirena-projection {width:30%;aspect-ratio: 1/1.6;}
-            #shuttle, #shuttle-projection {width:20%;aspect-ratio: 1/1.2;}
+            & .ships.starfleet {
+                #enterprise-svg {height:100%;}
+                #titan-svg {height:100%;}
+                #wallenberg-svg {height:100%;}
+                #lasirena-svg {height:90%;}
+                #shuttle-svg {height:80%;}
+            }
+
+            & .ships.enemy {
+                gap:.5em;
+                & .ship svg {rotate: 180deg;}
+            }
         }
 
-        & .ship {fill:var(--dblue);}
-
-        & .projections {
-            pointer-events: none;
-            position: absolute;
-            top:0;
-            height:100%;
-            width:100%;
-            opacity:0;
-            transition: opacity 600ms ease-out;
-
-            & .project {position:absolute;opacity:1;}
-        }
+        & #p2-ships-btn {transform:translate(-130px, -130%)}
     }
-
-    #p2-status-text-overlay {grid-area:p2-status;text-align: right;}
 
     & div {
         /* border:1px solid yellow; */
@@ -230,11 +298,4 @@ main {
         }
     }
     
-}
-
-.tile-btn {
-    border:none;
-    padding:3px;
-    width:175px;
-    height:60px;
 }

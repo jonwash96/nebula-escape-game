@@ -21,8 +21,8 @@ body {
     justify-content: flex-start;
     gap:2em;
 
-    h1 {color:var(--cyan);}
-    h2 {color:var(--dustycyan);}
+    & h1 {color:var(--cyan);}
+    & h2 {color:var(--dustycyan);}
 
     & input[type=text], input[type=password] {
         width:100%;

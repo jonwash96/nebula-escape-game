@@ -1,3 +1,4 @@
+/* GLOBAL STYLES*/
 * {
     box-sizing: border-box;
 
@@ -18,13 +19,42 @@
 }
 
 /* COLORWAYS */
-.red {background-color:var(--red);color:white;}
-.midnight {background-color:var(--midnight);color:white;}
-.dblue {background-color:var(--dblue);color:white;}
-.steelblue {background-color:var(--steelblue);color:white;}
-.blue {background-color:var(--blue);color:white;}
-.cyan {background-color:var(--cyan);color:var(--dblue);}
-.gold {background-color:var(--gold);}
+.red {background-color:var(--red) !important;color:white !important;}
+.midnight {background-color:var(--midnight) !important;color:white !important;}
+.dblue {background-color:var(--dblue) !important;color:white !important;}
+.steelblue {background-color:var(--steelblue) !important;color:white !important;}
+.blue {background-color:var(--blue) !important;color:white !important;}
+.cyan {background-color:var(--cyan) !important;color:var(--dblue) !important;}
+.gold {background-color:var(--gold) !important;}
+
+/* STYLES */
+.hide {display: none !important;}
+.show {display: block !important;}
+
+.tile-btn {
+    border:none;
+    padding:3px;
+    width:175px;
+    height:60px;
+}
+.tile-btn-mini {
+    border:none;
+    padding:3px;
+    width:120px;
+    height:45px;
+}
+.tile-btn.active:hover {
+    cursor:pointer;
+
+    &::before {
+        content:"";
+        position: absolute;
+        width:175px;
+        height:60px;
+        background-color: #fff2;
+        transform: translate(-57px, -22px);
+    }
+ }
 
 nav {
     position:absolute;

@@ -4,26 +4,29 @@ export const story = {
     narrative: [`<p>The bridge is quiet in the way only defeat can make it quiet.</p> <p>Your ship drifts without dignity, systems flickering as inertial dampeners strain against forces they were never designed to withstand. Outside the viewscreen, the nebula glows like a dying star &mdash; beautiful, indifferent, and pulling you ever inward toward a gravity well that no star chart ever warned you about.</p> <p>You&rsquo;ve lost the battle.<br /> Not in a blaze of glory &mdash; but in exhaustion, attrition, and mistakes that will replay in your mind for years&hellip; if you survive long enough to remember them.</p> <p>Reports flood in.</p> <p>Several enemy combatants remain aboard your ship. Some lie wounded in sickbay, barely clinging to life. Others &mdash; uninjured, silent, watchful &mdash; are secured in the brig. You know their kind. If they escape, they won&rsquo;t hesitate.</p> <p>Your crew looks to you.</p> <p>Not for certainty.<br /> Not for victory.</p> <p>For resolve.</p> <p>As the ship sinks deeper, your thoughts fracture &mdash; memories of past battles surfacing unbidden. Moments where leadership meant choosing who lived, who didn&rsquo;t, and who carried the burden afterward.</p> <p>You straighten in the captain&rsquo;s chair.</p> <p>This isn&rsquo;t over yet.</p>`]
   },
   part1: {
-    title: "Stowaways",
-    narrative: [`<p>The tactical grid locks into place. Your ships &mdash; memories of past engagements, victories and losses alike &mdash; are positioned across the board. Each placement feels deliberate, almost ceremonial, as though arranging the past itself.</p> <p>Then the alert sounds.</p> <p>A quiet one.<br />The kind officers use when they don&rsquo;t want panic to spread.</p> <p>Your first officer turns to you.</p> <p>&ldquo;Captain&hellip; we have reason to believe there are additional enemy personnel aboard the ship. They didn&rsquo;t beam out in time when we lost power.&rdquo;</p> <p>Stowaways.</p> <p>You don&rsquo;t know where they are. Engineering. Cargo bays. Jeffries tubes.<br />You only know they&rsquo;re out there &mdash; listening, watching, waiting.<br />And now they know you&rsquo;re vulnerable.</p>`],
-    prompts: [
-      {
-        option: "A",
-        case: 'user',
-        prompt: `Dispatch a security team to search quietly, without letting them know you&rsquo;re aware of their presence.`,
-        outcomes: [],
-        path: "duty",
-        map: []
-      },
-      {
-        option: "B",
-        case: 'user',
-        prompt: `Address them directly over the shipwide PA system &mdash; let them know you know they&rsquo;re here.`,
-        outcomes: [],
-        path: "courage",
-        map: []
-      }
-    ],
+    user: {
+      title: "Stowaways",
+      narrative: [`<p>The tactical grid locks into place. Your ships &mdash; memories of past engagements, victories and losses alike &mdash; are positioned across the board. Each placement feels deliberate, almost ceremonial, as though arranging the past itself.</p> <p>Then the alert sounds.</p> <p>A quiet one.<br />The kind officers use when they don&rsquo;t want panic to spread.</p> <p>Your first officer turns to you.</p> <p>&ldquo;Captain&hellip; we have reason to believe there are additional enemy personnel aboard the ship. They didn&rsquo;t beam out in time when we lost power.&rdquo;</p> <p>Stowaways.</p> <p>You don&rsquo;t know where they are. Engineering. Cargo bays. Jeffries tubes.<br />You only know they&rsquo;re out there &mdash; listening, watching, waiting.<br />And now they know you&rsquo;re vulnerable.</p>`],
+      prompts: [
+        {
+          option: "A",
+          case: 'user',
+          prompt: `Dispatch a security team to search quietly, without letting them know you&rsquo;re aware of their presence.`,
+          outcomes: [],
+          path: "duty",
+          map: []
+        },
+        {
+          option: "B",
+          case: 'user',
+          prompt: `Address them directly over the shipwide PA system &mdash; let them know you know they&rsquo;re here.`,
+          outcomes: [],
+          path: "courage",
+          map: []
+        }
+      ],
+    },
+    bot: () => story.part1.user
   },
   part2: {
     user: {
@@ -571,7 +574,7 @@ export const story = {
           prompt: `Breathe`,
           outcomes: [
             `<p>You find yourself standing in a valley.</p> <p>It stretches endlessly in every direction — rolling grass, distant mountains softened by haze, a sky too blue to be real.</p> <p>No wind.</p> <p>No sound.</p> <p>You look down at your hands. Uninjured. Clean. Whole.</p> <p>You don't remember arriving here.</p> <p>You don't remember leaving.</p> <p>The last thing you remember was— <em>playing some game with a stranger.</p><p>Who was it? What were we playing?</em></p><p>No— the bridge — alarms, calculations, impossible odds — and then… nothing.</p> <p>You begin to walk.</p> <p>The ground yields gently beneath your boots, but the landscape never changes. No matter how far you go, the mountains never draw closer. The sun never shifts.</p> <p>This is wrong.</p> <p>You stop.</p> <p>The realization doesn't arrive as panic, but as certainty.</p> <p>This is a construct.</p> <p>A solution without a problem. A destination without a journey.</p> <p>You close your eyes and try to retrace the moments before this place — the decisions, the sacrifices, the rules you followed because they were necessary.</p> <p>Memory returns in fragments.</p> <p>The valley waits, patient and silent.</p> <p>You turn, not to escape — but to test it.</p> <p>If this is an illusion… then it has limits.</p> <p>And limits can be found.</p>`,
-            `<p>You're standing hunched over a pan of eggs.</p> <p>A stove humming softly. Morning light spilling across a small kitchen table. The familiar smell of butter hitting a hot pan.</p> <p>You are making breakfast.</p> <p>Eggs — just beginning to set. Pancakes — perfectly golden.</p> <p>Your hands move without hesitation, as though they have done this a thousand times before.</p> <p>Somewhere nearby, a voice hums.</p> <p>Not loud.</p> <p>Not quiet.</p> <p>A simple melody, unhurried and kind.</p> <p>You glance toward the sound, but whoever it is remains just out of sight — around a corner, down a hallway, somewhere close enough to matter.</p> <p>Something scratches at the back of your mind, but you can't quite put your finger on it.</p> <p>You flip a pancake.</p> <p>It lands perfectly.</p> <p>The humming continues.</p> <p>You feel like for the first time in a long while, there is nothing you need to decide.</p> <p>Nothing you need to prove.</p> <p>The moment holds.</p> <p>And for once, you let it.</p><p>You scoop the eggs out of the pan onto a plate.</p><p></p>When you turn back toward the stove,</p><p>you find a man you don't know standing at the door&mdash;</p><p>staring at you with an intense look in his eye.</p><p>Then he opens his mouth to speak.</p>`
+            `<p>You're standing hunched over a pan of eggs.</p> <p>A stove humming softly. Morning light spilling across a small kitchen table. The familiar smell of butter hitting a hot pan.</p> <p>You are making breakfast.</p> <p>Eggs — just beginning to set. Pancakes — perfectly golden.</p> <p>Your hands move without hesitation, as though they have done this a thousand times before.</p> <p>Somewhere nearby, a voice hums.</p> <p>Not loud.</p> <p>Not quiet.</p> <p>A simple melody, unhurried and kind.</p> <p>You glance toward the sound, but whoever it is remains just out of sight — around a corner, down a hallway, somewhere close enough to matter.</p> <p>Something scratches at the back of your mind, but you can't quite put your finger on it.</p> <p>You flip a pancake.</p> <p>It lands perfectly.</p> <p>The humming continues.</p> <p>You feel like for the first time in a long while, there is nothing you need to decide.</p> <p>Nothing you need to prove.</p> <p>The moment holds.</p> <p>And for once, you let it.</p><p>You scoop the eggs out of the pan onto a plate.</p><p></p>When you turn back toward the stove,</p><p>you find a man you don't know standing at the door&mdash;</p><p>staring at you with an intense look in his eye.</p><p>You get the feeling that something's not quite right. You don't remember waking up this morning, just...eggs.</p><p>Then he opens his mouth to speak. . .</p><br><p>The End.</p><p>. . .Or is it?</p>`
           ],
           map: [
             'if answers were logical/duty based; then outcomes[0]',
