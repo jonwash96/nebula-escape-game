@@ -66,6 +66,18 @@ function handleUserSetupSubmit() {
     return result;
 }
 
+const createNewGameState = (userConfig) => Object({
+    gameKey,
+    update:gameKey,
+    side:userConfig.side,
+    narrative: {
+        goto:'intro',
+        gotoNext:'part0',
+        winner:'user',
+        path: {duty:0, courage:0},
+    }
+})
+
 function userSetupManager(e) {
     modalUserNnumber.textContent = `Player # ${playerNum}/${numPlayers}`
     const userConfig = handleUserSetupSubmit();
@@ -73,11 +85,13 @@ function userSetupManager(e) {
 
     if (userConfig.storageEnabled && userExists && userExists.password === userConfig.password) {
         userConfig.name = userExists.name;
-        userExists.games[userConfig.gameKey] = userConfig;
-        localStorage.setItem(userExists.username, userExists);
-    } else if (userExists && userExists.password !== userConfig.password && userConfig.storageEnabled) {
+        userExists.games[userConfig.gameKey] = createNewGameState(userConfig);
+        localStorage.setItem(userExists.username, JSON.stringify(userExists));
+    } else if (userConfig.storageEnabled && userExists && userExists.password !== userConfig.password) {
         let num = 1; let search = true;
         while (search) {
+            if (num > 10) {console.error("Too many users with the same name. Please restart & choose a different username");
+                break};
             localStorage.getItem(`userConfig.username${num}`) ? search = false : num++;
         };
         userConfig.username = `userConfig.username${num}`;
@@ -87,18 +101,27 @@ function userSetupManager(e) {
             password:userConfig.password,
             games: {}
         };
-        newUser.games[userConfig.gameKey] = Object(userConfig);
+        newUser.games[userConfig.gameKey] = createNewGameState(userConfig);
         localStorage.setItem(newUser.username, JSON.stringify(newUser));
     };
 
-    if (userConfig.storyMode) {localStorage.setItem('storyModePlayer', `player${playerNum}`)}
+    userConfig['games'] = {[userConfig.gameKey]: createNewGameState(userConfig)};
+
+    if (userConfig.storyMode) {
+        const item = {user:userConfig.username, location:(userConfig.storageEnabled ? 'local' : 'session')};
+        numPlayers===1 && sessionStorage.setItem('storyModePlayer', JSON.stringify(item))
+        numPlayers===2 && !sessionStorage.getItem('storyModePlayer') && sessionStorage.setItem('storyModePlayer', JSON.stringify(item))
+    }
 
     target.querySelectorAll('input').forEach(input => {
         if (!input.id.includes('settings')) input.value = ''; input.checked = false;
     });
-    localStorage.setItem(`player${playerNum}`, JSON.stringify(userConfig));
+
+    sessionStorage.setItem(`player${playerNum}`, JSON.stringify(userConfig));
+
     if (playerNum===numPlayers) {
-        if (numPlayers===1) { localStorage.setItem('player2', JSON.stringify(BotConfig));}
+        if (numPlayers===1) {sessionStorage.setItem('player2', JSON.stringify(BotConfig));}
+        sessionStorage.setItem('gameMode', 'init');
         window.location = "./screens/dashboard/dashboard.html"
     };
     playerNum++;

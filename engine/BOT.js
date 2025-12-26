@@ -8,7 +8,7 @@ export default class BOT {
         this.difficulty = botConfig.difficulty;
         this.side = botConfig.side || 'enemy';
         this.gameKey = botConfig.gameKey;
-        this.ships = Object(ships[botConfig.side]);
+        this.ships = botConfig.ships || Object(ships[botConfig.side]);
         
         this.board = new Board (boardEl, options);
         this.board.mode('enable-bot-board');
@@ -19,7 +19,6 @@ export default class BOT {
     misses = [];
 
     damage = {
-        player: this,
         health: 0,
         hits: () => Object.values(this.ships).map(ship=>ship.location.filter(cell=>cell.getAttribute('hit'))),
         dec(num) {this.damage++},

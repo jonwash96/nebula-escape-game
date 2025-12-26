@@ -17,6 +17,7 @@ document.addEventListener('click', (e) => {
         case 'Load': loadMenuOptions.classList.toggle('expand'); break;
         case 'Rules': element.classList.toggle('expand'); break;
         case 'Game Setup': settingsPane.classList.toggle('hide'); break;
+        case 'Clear': localStorage.clear(); sessionStorage.clear(); break; //!
     }
     modalUserNnumber.textContent = `Player # ${playerNum}/${numPlayers}`
 })

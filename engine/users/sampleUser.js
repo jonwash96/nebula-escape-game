@@ -3,7 +3,7 @@ const userName = {
     password:'string',
     storageEnabled:'bool',
     games: {
-        'gameKey(playerState)':{
+        'gameKey(playerState)': {
             gameKey:'number',
             update:'unix timestring',
             opponent:'[{bot}||username||name,gameKey]',
@@ -12,7 +12,7 @@ const userName = {
             hits:'array',
             misses:'array',
             score:'number',
-            damage:{
+            damage: {
                 hits:'array',
                 health:'number',
             },

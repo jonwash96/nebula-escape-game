@@ -4,13 +4,15 @@ import { ships } from "../../game/ships.js";
 
 export default class Board {
 	static boardNumber = 0;
-	constructor(root, targeting, options) {
+	constructor(root, boardConfig, options) {
+		Board.boardNumber++;
         this.root = root;
 		this.follow = options?.follow || false;
 		this.enableTargeting = options?.enableTargeting || false;
-		Board.boardNumber++;
 		this.boardNumber = Board.boardNumber;
 		this.shipToPlace = null;
+		this.cells = boardConfig.cells || {};
+		this.activeCells = boardConfig.activeCells || [];
 	};
 
 
@@ -72,6 +74,7 @@ export default class Board {
 		this.bracketNode = this.root.querySelector(`.bracket-node > span`);
 		
 		this.createBoard();
+		
 		document.addEventListener('keypress', this.handleKeyPress.bind(this));
 		this.root.addEventListener('mousemove',this.handleMouseMove.bind(this));
 

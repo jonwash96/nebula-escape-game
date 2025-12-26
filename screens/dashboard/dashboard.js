@@ -7,13 +7,15 @@ import { nav } from "../../nav_dev.js";nav();
 
 // const targetingSystem = document.getElementById('load-targeting-System');
 let activeProjection;
-const status = {mode:'place-ships'};
-let p1UserConfig, p2UserConfig;
+const status = {mode:'init'};
+let domSet = false;
+let winner;
 
 const headerEl = document.getElementById('game-status-header');
 
 const p1 = {
     status:null,
+    config:null,
     boardEl: document.getElementById('p1-board'),
     gameSummaryPanel: document.getElementById('p1-summary-text-overlay'),
     shipsPanel: document.getElementById('p1-ships-text-overlay'),
@@ -24,26 +26,13 @@ const p1 = {
 
 const p2 = {
     status:null,
+    config:null,
     boardEl: document.getElementById('p2-board'),
     gameSummaryPanel: document.getElementById('p2-summary-text-overlay'),
     shipsPanel: document.getElementById('p2-ships-text-overlay'),
     shipsPanelShips: document.querySelector('#p2-ships-text-overlay .ships'),
     statusPanel: document.getElementById('p2-status-text-overlay'),
     shipsPanelBtn: document.getElementById('p2-ships-btn'),
-    ships: {
-        enterprise: document.querySelector('#enterprise'),
-        titan: document.querySelector('#titan'),
-        wallenberg: document.querySelector('#wallenberg'),
-        lasirena: document.querySelector('#lasirena'),
-        shuttle: document.querySelector('#shuttle')
-    },
-    projections: {
-        enterprise: document.querySelector('#enterprise-projection'),
-        titan: document.querySelector('#titan-projection'),
-        wallenberg: document.querySelector('#wallenberg-projection'),
-        lasirena: document.querySelector('#lasirena-projection'),
-        shuttle: document.querySelector('#shuttle-projection')
-    },
 }
 
 const buttons = {
@@ -94,7 +83,7 @@ async function autoLoadShips(player) {
         console.log("ITERATOR", i, "allShips", allShips.length)
         if (!allShips[i].location) {
             await new Promise((resolve,reject) => {
-                setTimeout(()=>player.board.setShipToPlace(allShips[i],resolve,reject).bind(player.board), 50);
+                setTimeout(()=>player.board.setShipToPlace(allShips[i],resolve,reject), 50);
             });
             console.log("Ship's placement location", allShips[i]);
         }
@@ -127,7 +116,8 @@ async function placeShips() {
             usr && (player.shipsPanelBtn.textContent = "Auto");
             usr && player.shipsPanelBtn.classList.remove('hide');
             usr && player.shipsPanelBtn.classList.add('clickable');
-            readyPlayerX = () => resolve(mode('ready',player));
+            readyPlayerX = () => {usr && player.shipsPanelBtn.classList.toggle('hide'); 
+                resolve(mode('ready',player))};
             usr && (autoLoadShipsCurry = (e) => autoLoadShips(player,e));
             usr && player.shipsPanelBtn.addEventListener('click', autoLoadShipsCurry);
             if (!usr) {player.player.mode('place-ships',{readyPlayerX, player})};
@@ -135,34 +125,8 @@ async function placeShips() {
     }
 }
 
-function saveState(player, option) {
-    const useErrorSafe = sessionStorage.getItem('useErrorSafe');
-    headerEl.textContent = "Saving. . .";
-    player.player.updateHistory();
-
-    if (option === 'init') {
-        if (useErrorSafe) alert("STORAGE ERROR DETECTED! Please Check the dev console for more info. (Tools > Toggle Developer Tools)");
-        const playerState = {
-            winner:'user',
-            narrative: { goto:'intro',
-                path: {duty:0,courage:0} }
-        };
-        sessionStorage.setItem('storyModePlayer', playerState);
-    }
-}
-
 function gotoNarrative() {
     window.location = "http://127.0.0.1:5500/screens/narrative/narrative.html"
-}
-
-function getState(option) {
-    switch (option) {
-        case 'init': {
-            p1UserConfig = JSON.parse(localStorage.getItem('player1'));
-            p2UserConfig = JSON.parse(localStorage.getItem('player2'));
-        } break;
-        case 'storyModePlayer': {return localStorage.getItem('storyModePlayer')}
-    }
 }
 
 function setActiveBoard(player) {
@@ -173,29 +137,34 @@ function setActiveBoard(player) {
         : p1.board.root.classList.remove('active-board');
 }
 
+
 // INIT
 async function init() {
-    // LOAD CONFIG
-    getState('init');
-
+    let bot = false;
+console.log(p1.config)
+console.log(p2.config)
     // CREATE CLASSES
-    p1.player = new Player(p1UserConfig, p1.boardEl, {follow:false,enableTargeting:false});
+    p1.player = new Player(p1.config, p1.boardEl, {follow:false,enableTargeting:false});
     p1.board = p1.player.board;
     await p1.board.render();
-    if (p2UserConfig.name === "BOT") {
-        p2.player = new BOT(p2UserConfig, p2.boardEl,{follow:false,enableTargeting:false});
+    if (p2.config.name === "BOT") {
+        bot = true;
+        p2.player = new BOT(p2.config, p2.boardEl,{follow:false,enableTargeting:false});
         p2.board = p2.player.board;
         await p2.board.render();
     } else {
-        p2.player = new Player(p2UserConfig, p2.boardEl,{follow:false,enableTargeting:false});
+        p2.player = new Player(p2.config, p2.boardEl,{follow:false,enableTargeting:false});
         p2.board = p2.player.board;
         await p2.board.render();
     }
-    
+    console.log(p1.player)
+    console.log(p2.player)
+
     // REFF DOM
-    buttons.switchUser.textContent = 'done';
+    console.log("Setup DOM");
+    !bot && (buttons.switchUser.textContent = 'Switch User');
     buttons.orient.classList.add('clickable');
-    buttons.switchUser.classList.add('clickable');
+    !bot && buttons.switchUser.classList.add('clickable');
 
     // INIT PLAYER SPECIFFIC ITEMS
     [p1,p2].forEach(player => {
@@ -205,6 +174,7 @@ async function init() {
             const wrapper = document.createElement('div');
                 wrapper.innerHTML = ship.projection;
                 wrapper.id = ship.name;
+                wrapper.title = ship.name;
                 wrapper.classList.add('ship');
                 wrapper.setAttribute('owner', player===p1 ? 'p1' : 'p2');
                 player.shipsPanelShips.appendChild(wrapper);
@@ -212,7 +182,7 @@ async function init() {
     
         // HANDLE EVENTS
         buttons.orient.addEventListener('click', (e)=>player.boardEl.classList.toggle('rotate'));
-        document.addEventListener('mousemove',(e)=>{
+        document.addEventListener('mousemove', (e) => {
             // handleMouseMove(e)
             const elements = document.elementsFromPoint(e.clientX,e.clientY);
             // console.log(elements)//!
@@ -222,26 +192,80 @@ async function init() {
                 document.querySelector('main').style.pointerEvents = 'none';
             } else {document.querySelector('main').style.pointerEvents = 'all';}
         });
-    })
+    });
+    console.log("Init Done");
+    return domSet = true;
+};
 
-    // SET MODE
-    mode('place-ships');
+function getState(option) {
+    switch (option) {
+        case 'gameMode': {return sessionStorage.getItem('gameMode')}; break;
+        case 'storyModePlayer': {return sessionStorage.getItem('storyModePlayer')}
+        case 'init-profiles': {
+            p1.config = JSON.parse(sessionStorage.getItem('player1'));
+            p2.config = JSON.parse(sessionStorage.getItem('player2'));
+        } break;
+        case 'profiles': {
+            const player1 = JSON.parse(sessionStorage.getItem('player1'))
+            const player2 = JSON.parse(sessionStorage.getItem('player2'))
+            if (player1.location === 'local') {
+                p1.config = JSON.parse(localStorage.getItem(player1.user));
+            } else {p1.config = JSON.parse(sessionStorage.getItem(player1.user));}
+            if (player2.location === 'local') {
+                p2.config = JSON.parse(localStorage.getItem(player2.user));
+            } else {p2.config = JSON.parse(sessionStorage.getItem(player2.user));}
+        } break;
+    }
+}
+
+function saveState(player, option) {
+    const useErrorSafe = sessionStorage.getItem('useErrorSafe');
+    headerEl.textContent = "Saving. . .";
+    switch (option) {
+        case 'full': { console.log("SaveState full", p1.player.storageEnabled, p2.player.storageEnabled)
+            if (p1.player.storageEnabled) {
+                localStorage.setItem(p1.player.username, JSON.stringify(p1.player))
+            } else {sessionStorage.setItem(p1.player.username, JSON.stringify(p1.player))}
+            if (p2.player.storageEnabled) {
+                localStorage.setItem(p2.player.username, JSON.stringify(p2.player))
+            } else {sessionStorage.setItem(p2.player.username, JSON.stringify(p2.player))}
+        } break;
+        case 'player-lookup': {
+            sessionStorage.setItem( 'player1', JSON.stringify({user:p1.config.username, location:p1.config.storageEnabled ? 'local' : 'session'}) );
+            sessionStorage.setItem( 'player2', JSON.stringify({user:p2.config.username, location:p2.config.storageEnabled ? 'local' : 'session'}) );
+            delete p1.config;
+            delete p2.config;
+        }
+    }
 }
 
 // MODE
 async function mode(option,player,data) {
+    // !domSet && setupDom();
     console.log("Dashboard Mode Set:", option, player?.username, data);
+    let usr = !player?.player.name === 'BOT'
     status.mode = option;
+
     switch (option) {
-        case 'init': {await init();}
-        case 'place-ships': {placeShips()} break;
+        case 'init': {
+            getState('init-profiles');
+            await init();
+            saveState([p1,p2],'full');
+            saveState([p1,p2],'player-lookup');
+            getState('storyModePlayer')
+                ? gotoNarrative()
+                : mode('place-ships');
+        } break;
+        case 'place-ships': {
+            getState('profiles');
+            await init();
+            placeShips();
+        }; break;
         case 'ready': { player.status = 'ready'; 
             if (p1.status === 'ready' && p2.status === 'ready') {
-                if (getState('storyModePlayer')) {
-                    player.board.mode('static');
-                    saveState(player);
-                    player.player.storyMode && gotoNarrative();
-                } else mode('begin-game');
+                [p1,p2].forEach(p=>saveState('full'));
+                if (getState('storyModePlayer')) gotoNarrative();
+                    else mode('begin-game');
             };
         } break;
         case 'begin-game': {
@@ -257,7 +281,5 @@ async function mode(option,player,data) {
     }
 }
 
-mode('init');
-
-
-
+// RUN
+mode(getState('gameMode'));
