@@ -12,6 +12,10 @@ cancelBtn.addEventListener('click', (e)=>{
     });
 });
 
+let gameKey;
+let holdForErrors = 0;
+const players = [];
+
 const BotConfig = {
     name:'BOT',
     username:'BOT',
@@ -26,57 +30,65 @@ const BotConfig = {
         boardSize: 26,
     }
 }
-const DefaultConfig = {
-    username:'Default',
-    password:'password',
-    storageEnabled:false,
-    gameKey:null,
-    side:'starfleet',
-    config:  {
-        boardDisplayConfig:['default'],
-        storyMode:true,
-        useOffset: true,
-        turnTimer: '00:00.00',
-        boardSize: 26,
+
+// HELPER FUNCTIONS
+const createNewNarrative = () => Object({
+    goto:'intro',
+    winner:'user',
+    path: {duty:0, courage:0},
+})
+
+const savePreviouseGameState = (userObject) => {
+    const items = ['gameKey','gameState', 'update', 'opponent', 'side', 'hits', 'misses', 'score', 'damage', 'narrative'];
+    const gameState = {};
+    for (let item of items) {item && (gameState[item] = userObject[item])};
+    gameState['ships'] = {};
+    for (let ship of userObject.ships) {
+        gameState.ships[ship.name] = {
+            'sillhouette': ship.sillhouette,
+            'location': ship.location,
+            'weapons': {}
+        };
+        for (let weapon of ship.weaponweapons) {
+            gameState.ships[ship.name].weapons[weapon] = userObject.ships[ship.name].weapons[weapon].remaining
+        }
     }
+    return Object(gameState);
 }
 
-let gameKey;
+const createNewUser = (userConfig) => {
+    userConfig['narrative'] = createNewNarrative();
+    userConfig['games'] = {};
+    userConfig['gameState'] = 'in-progress';
+    userConfig['opponent'] = null;
+    return Object(userConfig);
+}
 
+// FUNC
 function handleUserSetupSubmit() {
     gameKey = gameKey || Date.now();
-    const result = { gameKey };
+    const result = { gameKey, config: {} };
     target.querySelectorAll('input').forEach(input => {
         switch (input.id) {
-            case 'modal-player-name': {result['name'] = input.value !== '' ? input.value : "player"+playerNum} break;
-            case 'modal-username': {input.value !== '' && (result['username'] = input.value)} break;
-            case 'modal-password': {input.value !== '' && (result['password'] = input.value)} break;
+            case 'modal-player-name': {result['name'] = input.value !== '' ? input.value : "User"+playerNum} break;
+            case 'modal-username': {result['username'] = input.value !== '' ? input.value : result.name} break;
+            case 'modal-password': {result['password'] = input.value !== '' ?  input.value : null} break;
             case 'modal-choose-starfleet': {input.checked && (result['side'] = 'starfleet')} break;
             case 'modal-choose-enemy': {input.checked && (result['side'] = 'enemy')} break;
         }
     });
-    settingsPane.querySelectorAll('input').forEach(input => {
+    settingsPanel.querySelectorAll('input').forEach(input => {
         switch (input.id) {
-            case 'settings-storageEnabled': {result['storageEnabled'] = result.username ? input.checked : false} break;
+            case 'settings-storageEnabled': {result['storageEnabled'] = result.password ? input.checked : false} break;
             case 'settings-storyMode': {result['storyMode'] = input.checked} break;
             case 'settings-turnTimer': {input.checked && (result['turnTimer'] = document.querySelector('input[type=number]').value)} break;
+            case 'settings-useRightSide': {result['useRightSide'] = input.checked} break;
+            case 'settings-useOffset': {result['useOffset'] = input.checked} break;
         }
     });
     !result.side && (result['side'] = 'starfleet');
     return result;
 }
-
-const createNewGameState = (userConfig) => Object({
-    gameKey,
-    update:gameKey,
-    side:userConfig.side,
-    narrative: {
-        goto:'intro',
-        gotoNext:'part0',
-        winner:'user',
-        path: {duty:0, courage:0},
-    }
-})
 
 function userSetupManager(e) {
     modalUserNnumber.textContent = `Player # ${playerNum}/${numPlayers}`
@@ -84,28 +96,32 @@ function userSetupManager(e) {
     const userExists = JSON.parse(localStorage.getItem(userConfig.username));
 
     if (userConfig.storageEnabled && userExists && userExists.password === userConfig.password) {
+        if (userExists.gameState) {
+            userExists.games[userExists.gamekey] = savePreviouseGameState(userExists);
+            const items = ['gameKey','gameState', 'update', 'opponent', 'ships', 'side', 'hits', 'misses', 'score', 'damage', 'narrative'];
+            for (let item of items) {delete userConfig[item]}
+        };
         userConfig.name = userExists.name;
-        userExists.games[userConfig.gameKey] = createNewGameState(userConfig);
-        localStorage.setItem(userExists.username, JSON.stringify(userExists));
+        userConfig.games = userExists.games;
+        userConfig['narrative'] = createNewNarrative();
+        players.push(userConfig);
     } else if (userConfig.storageEnabled && userExists && userExists.password !== userConfig.password) {
-        let num = 1; let search = true;
-        while (search) {
-            if (num > 10) {console.error("Too many users with the same name. Please restart & choose a different username");
-                break};
-            localStorage.getItem(`userConfig.username${num}`) ? search = false : num++;
+        const message = `<em>User Exists but Password is incorrect. Please choose a different username or check your password. After 2 more attempts, you'll automatically be issued a new username with the password you entered. Check the dev console to manage storage. (Tools &lt; Toggle Developer Tools)</em>`
+        if (holdForErrors !== 3) {
+            holdForErrors++; 
+            document.getElementById('incorrect-password').innerHTML = message;
+            return
+        };
+
+        let num = 1;
+        while (num <= 10) {
+            if (localStorage.getItem(`userConfig.username${num}`)) {break} else {num++};
         };
         userConfig.username = `userConfig.username${num}`;
-        const newUser = {
-            username:userConfig.username,
-            name:userConfig.name,
-            password:userConfig.password,
-            games: {}
-        };
-        newUser.games[userConfig.gameKey] = createNewGameState(userConfig);
-        localStorage.setItem(newUser.username, JSON.stringify(newUser));
-    };
-
-    userConfig['games'] = {[userConfig.gameKey]: createNewGameState(userConfig)};
+        players.push(createNewUser(userConfig));
+    } else {
+        players.push(createNewUser(userConfig));
+    }
 
     if (userConfig.storyMode) {
         const item = {user:userConfig.username, location:(userConfig.storageEnabled ? 'local' : 'session')};
@@ -117,10 +133,20 @@ function userSetupManager(e) {
         if (!input.id.includes('settings')) input.value = ''; input.checked = false;
     });
 
-    sessionStorage.setItem(`player${playerNum}`, JSON.stringify(userConfig));
-
     if (playerNum===numPlayers) {
-        if (numPlayers===1) {sessionStorage.setItem('player2', JSON.stringify(BotConfig));}
+        if (numPlayers===1) {
+            if (userConfig.useRightSide) {
+                sessionStorage.setItem(`player2`, JSON.stringify(userConfig));
+                sessionStorage.setItem(`player1`, JSON.stringify(BotConfig));
+            } else {
+                sessionStorage.setItem('player1', JSON.stringify(userConfig));
+                sessionStorage.setItem('player2', JSON.stringify(BotConfig));
+            };
+        } else {
+            players.forEach((player,i) => {
+                sessionStorage.setItem(`player${i + 1}`, JSON.stringify(player))
+            })
+        }
         sessionStorage.setItem('gameMode', 'init');
         window.location = "./screens/dashboard/dashboard.html"
     };

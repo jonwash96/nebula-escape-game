@@ -32,14 +32,15 @@
         </li>
     </ul>
 
-    <section id="settings-pane" class="hide">
+    <section id="settings-panel" class="hide">
         <h1>Game Setup</h1>
-        <p>These settings will be used for a new game. You can change some of them durring the game.</p>
+        <h4>These settings will be used for a new game. You can change some of them durring the game.</p>
         <ul>
-            <li><input id="settings-storageEnabled" type="checkbox" checked name="settings" /><label for="settings-storageEnabled">Enable Local Storage. (Allows you to close the tab)</label></li>
-            <li><input id="settings-storyMode" type="checkbox" checked name="settings" /><label for="settings-storyMode">Enable Story Mode. The immersive Nebula Escape Adventure. Set for player 1 in 2-player mode. See <a>Gameplay</a> for more info.</label></li>
-            <li><input id="settings-turnTimer" type="checkbox" name="settings" /><label for="settings-turnTimer">Set a time limit for each player's turn. Default is no limit. Use an integer for minutes up to 90. </label><input type="number" min="00" max="90"></li>
-            <li><input id="settings-useRightSide" type="checkbox" /><label for="settings-useRightSide">Use Right side. In 1 player mode, use the right side of the screen. BOT will be left.</label></li>
+            <li><input id="settings-storageEnabled" type="checkbox" checked name="settings" /><label for="settings-storageEnabled"><strong> Enable Local Storage:</strong> (Allows you to close the tab)</label></li>
+            <li><input id="settings-storyMode" type="checkbox" checked name="settings" /><label for="settings-storyMode"><strong> Enable Story Mode:</strong> The immersive Nebula Escape Adventure. Set for player 1 in 2-player mode. See <a>Gameplay</a> for more info.</label></li>
+            <li><input id="settings-turnTimer" type="checkbox" name="settings" /><label for="settings-turnTimer"><strong> Use Time-limit:</strong> <input type="number" min="00" max="90" placeholder="0.0" /> Set a time limit for each player's turn. Default is no limit. Use an integer for minutes up to 90. </label></li>
+            <li><input id="settings-useRightSide" type="checkbox" checked /><label for="settings-useRightSide"><strong> Use Right side:</strong> In 1 player mode, use the right side of the screen. BOT will be left. (In 2 player mode, players are added from left to right in registration order)</label></li>
+            <li><input id="settings-useOffset" type="checkbox" checked /><label for="settings-useOffset"><strong> Use Offset:</strong> For placing ships & registering the target cell of ships on the board. If enabled, ship is offset to be centered along its top edge under the mouse.</label></li>
         </ul>
     </section>
 
@@ -51,17 +52,23 @@
             <h1>User Setup</h1>
         </div>
         <span class="modal-user-number">Player #</span>
+        <span id="story-mode-notify" style="color:#f66;display:none;">Player 1 will be the story mode Player. There can only be 1 story mode player.</span>
         <section id="modal-user-info">
+
             <label for="modal-player-name">Name</label><br>
             <input id="modal-player-name" type="text" placeholder="Optional. Defaults to player number or username.">
+
             <label for="modal-username">Username<br>
                 <span>Existing usernames must match exactly.</span>
             </label><br>
             <input id="modal-username" type="text" placeholder="Optional. Set this only if you want to save your stats & gamestate to the browser."><br>
+            
+            <span id="incorrect-password" style="color:#f66;"></span>
             <label for="modal-password">Password<br>
                 <span>Passwords must match exactly, else new user with same name created. If no password, no user state saved.</span>
             </label><br>
             <input id="modal-password" type="password" placeholder="Optional. (*Plain text only*) Enter this if you have/set a username."><br>
+        
         </section>
 
         <section id="modal-choose-side">

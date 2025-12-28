@@ -1,30 +1,31 @@
-import { ships } from "./ships.js";
+import Ships from "../../components/Ships/ships.js";
 import Board from "../../components/board/Board.js";
 
 export default class Player {
     static playerNum = 0;
-    constructor(userConfig, boardEl, options) {
+    constructor(userConfig, boardEl, targetingEl, options) {
         Player.playerNum++;
         console.log("Construct new Player: ("+Player.playerNum+") With: ",userConfig)
         this.storageEnabled = userConfig.storageEnabled;
-        this.name = userConfig.name;
+        this.name = userConfig.name ;
+        this.username = userConfig.username;
+        !userConfig.password ?? (this.password = userConfig.password);
         this.side = userConfig.side;
         this.gameKey = userConfig.gameKey;
-        this.ships = userConfig.ships || Object(ships[userConfig.side]);
+        this.shipsClass = new Ships(userConfig);
+        this.ships = this.shipsClass.ships;
+        console.log('PLAYER SHIPS: ', this.ships)
         this.storyMode = userConfig.storyMode;
-        this.games = userConfig.games || Object(userConfig.games);
+        this.narrative = userConfig.narrative;
+        this.games = userConfig.games;
 
-        this.lastUpdate = userConfig.lastUpdate || Date.now();
-        this.board = new Board(boardEl, userConfig.board, options);
+        this.update = userConfig.update || Date.now();
+        this.board = new Board(boardEl, targetingEl, userConfig.board, options);
         this.score = userConfig.score || 0;
         this.hits = userConfig.hits || [];
         this.misses = userConfig.misses || [];
         this.damage['health'] = userConfig.damage?.health || 0;
 
-        if (userConfig.storageEnabled === true) {
-            this.username = userConfig.username;
-            this.password = userConfig.password;
-        }
     }
 
     // OBJ

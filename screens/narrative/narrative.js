@@ -1,5 +1,4 @@
 import { nav } from "../../nav_dev.js";nav();
-import { config } from "../../game/config.js";
 import { story } from "../../assets/story/story.js";
 
 const promptWrapperEl = document.getElementById('prompt-wrapper');
@@ -21,8 +20,8 @@ devModeBtns.forEach(el=>el.title = "dev-mode dissabled");
 document.getElementById('toggle-dev-mode-1').addEventListener('click', (e) => {
     const enableDevMode = () => devModeBtns.forEach(el=> {
         el.addEventListener('click', e=> {
-            game.narrative.goto = e.target.id.replace('goto-', '');
-            sessionStorage.setItem('player', JSON.stringify(game));
+            player.narrative.goto = e.target.id.replace('goto-', '');
+            sessionStorage.setItem('player', JSON.stringify(player));
             console.log(e.target.id);
             window.location.reload();
     }); el.title = el.id});
@@ -32,7 +31,7 @@ document.getElementById('toggle-dev-mode-1').addEventListener('click', (e) => {
 
 Array.prototype.randomIDX = function() {return this[Math.floor(Math.random() * this.length)]};
 
-let game, storyModePlayer, player;
+let storyModePlayer, player;
 let response, gotoNext;
 let handleWinCondition = 0;
 
@@ -40,23 +39,22 @@ try {storyModePlayer = JSON.parse(sessionStorage.getItem('storyModePlayer'));
     player = storyModePlayer.location==='local'
         ? JSON.parse(localStorage.getItem(storyModePlayer.user))
         : JSON.parse(sessionStorage.getItem(storyModePlayer.user));
-    game = player.games[player.gameKey];
-    if (game == null) throw new Error("game null. Resolving. . .")
+    if (player.narrative == null) throw new Error("Error getting player state. Resolving. . .")
     console.log("PlayerState succcess");
-    console.log(game);
+    console.log(player.narrative);
 } 
 catch (err) {
     console.warn(err)
     if (err.message.includes('storyModePlayer is not defined')) {
         window.location = "../screens/dashboard/dashboard.html"}
-    game = {
+    player = {
     winner:'user',
     narrative: {goto:'intro',
         path: {duty:0,courage:0}
     }
 }}
 
-render(game.narrative.goto, game.winner);
+render(player.narrative.goto, player.winner);
 
 // TODO: Put the lore on the title screen.
 
@@ -73,33 +71,36 @@ function render(goto, winner) {
             continueBtn.addEventListener('click', exitStoryMode)
             setTimeout(()=>continueBtn.classList.replace('dblue', 'red'), 30000);
         } break;
-        case 'part1': winner = 'user'; break;
+        case 'part1': {
+            winner = 'user'; 
+            sessionStorage.setItem('gameMode', 'begin-game')
+        } break;
         case 'part2': break;
         case 'part3': { 
-            if (game.winner === 'user') {
-                if (game.narrative.part2.winner === 'user' &&
-                  game.narrative.part2.option ==="D") {
+            if (player.winner === 'user') {
+                if (player.narrative.part2.winner === 'user' &&
+                  player.narrative.part2.option ==="D") {
                     useNarrarive = story[goto][winner].narrative[1];
                     usePrompts = story[goto][winner].altPrompts
                 } else {
                     useNarrarive = story[goto][winner].narrative[0]
                 };
             } 
-            else if (game.winner === 'bot') {
-                if (game.narrative.part2.winner === 'user') {
-                    if (game.narrative.part2.option ==="D") {
+            else if (player.winner === 'bot') {
+                if (player.narrative.part2.winner === 'user') {
+                    if (player.narrative.part2.option ==="D") {
                         useNarrarive = story[goto][winner].narrative[1] 
                     } else {
                         useNarrarive = story[goto][winner].narrative[0]
                     }; 
-                } else if (game.narrative.part2.winner === 'bot') {
+                } else if (player.narrative.part2.winner === 'bot') {
                     useNarrarive = story[goto][winner].narrative[2]
                 }; 
             }; 
         } break;
         case 'part4': break;
         case 'part5': break;
-        case 'part6': {handleWinCondition =  game.winner==='user' ? 1 : 100;
+        case 'part6': {handleWinCondition =  player.winner==='user' ? 1 : 100;
             document.querySelector('h3').textContent = "Which Do You Choose?"
             tallyPath() === 'courage'
             ? useOutcome = 1
@@ -114,7 +115,7 @@ function render(goto, winner) {
     narrativeEl.innerHTML = useNarrarive || story[goto][winner].narrative.randomIDX();
     // imageEl.src = story[goto][winner].image || '';
 
-    !goto==='intro' || !goto==='part1' &&
+    goto!=='intro' &&
     (usePrompts || story[goto][winner].prompts).forEach(prompt => {
         const option = document.createElement('div');
             option.classList.add('pill','cyan');
@@ -151,20 +152,20 @@ function render(goto, winner) {
 
 function handleResponse(e,prompt,useOutcome) {
     response = prompt;
-    game.narrative[game.narrative.goto] = {
-        winnner:game.winner,
+    player.narrative[player.narrative.goto] = {
+        winnner:player.winner,
         option:response.option,
         prompt, response
     };
 
     if (handleWinCondition===2) {handleTextResponse(e,prompt); return;}
     
+    continueBtn.classList.replace('dblue', 'red');
+    continueBtn.classList.add('active');
     const curry = (e) => handleOutcomes(e,useOutcome);
     if (prompt.outcomes.length > 0) {
         continueBtn.addEventListener('click', curry);
-        continueBtn.classList.replace('dblue', 'red');
-        continueBtn.classList.add('active');
-    } else exitStoryMode();
+    } else continueBtn.addEventListener('click', exitStoryMode);
 }
 
 function handleOutcomes(e,useOutcome) {
@@ -172,11 +173,11 @@ function handleOutcomes(e,useOutcome) {
     continueBtn.addEventListener('click', exitStoryMode);
     subtitleEl.innerHTML = "Outcome";
     narrativeEl.innerHTML = response.outcomes[useOutcome] || response.outcomes.randomIDX();
-    console.log("game",game)
+    console.log("player",player)
 }
 
 function handleTextResponse(e,prompt) {
-    game.narrative[game.narrative.goto] = response;
+    player.narrative[player.narrative.goto] = response;
     continueBtn.removeEventListener('click', handleOutcomes);
     continueBtn.addEventListener('click', exitStoryMode);
     subtitleEl.innerHTML = "Your Response";
@@ -196,14 +197,14 @@ function handleTextResponse(e,prompt) {
 function tallyPath(option) {
     switch (option) {
         case 'add': {
-            if (!game.goto==='intro') {
-                if (response.path === 'courage') game.narrative.path.courage++;
-                if (response.path === 'duty') game.narrative.path.duty++;
+            if (!player.goto==='intro') {
+                if (response.path === 'courage') player.narrative.path.courage++;
+                if (response.path === 'duty') player.narrative.path.duty++;
             return true;
             }
         } break;
         default: {
-            if (game.narrative.path.courage > game.narrative.path.duty) 
+            if (player.narrative.path.courage > player.narrative.path.duty) 
                 return 'courage';
             else return 'duty';
         }
@@ -212,20 +213,21 @@ function tallyPath(option) {
 
 function exitStoryMode() {
     promptWrapperEl.innerHTML = 'loading...';
-    devMode && (game.winner = 'user');
+    devMode && (player.winner = 'user');
 
     const tally = tallyPath('add');
 
-    game.narrative.goto = gotoNext;
-    game.narrative.path[tallyPath()]+1;
-    game.update = Date.now();
-    if (!game.goto==='intro') {
-    game.narrative[game.narrative.goto] = 
-        {winner:game.winner, option:response.option};
+    player.narrative.goto = gotoNext;
+    player.narrative.path[tallyPath()]+1;
+    player.update = Date.now();
+    if (!player.narrative.goto==='intro') {
+    player.narrative[player.narrative.goto] = 
+        {winner:player.winner, option:response.option};
     }
-    storyModePlayer[1]==='local'
-        ? localStorage.setItem(player.userName, JSON.stringify(player))
-        : sessionStorage.setItem(storyModePlayer[0], JSON.stringify(player));
+
+    storyModePlayer.location==='local'
+        ? localStorage.setItem(player.username, JSON.stringify(player))
+        : sessionStorage.setItem(storyModePlayer.user, JSON.stringify(player));
     
     devMode && window.location.reload();
 

@@ -1,34 +1,52 @@
 const userName = {
     username:'string',
     password:'string',
+    gameState: 'in-progress|win|loose',
+    gameKey:'number',
+    update:'unix timestring',
+    opponent:'[{bot}||username||name,gameKey]',
+    side:'string',
+    ships:'object',
+    hits:'array',
+    misses:'array',
+    score:'number',
+    damage: {
+        health:'number',
+    },
+    boardDisplayConfig:'array',
     storageEnabled:'bool',
-    games: {
+    storyMode:'bool',
+    turnTimer:'string',
+    useRightSide:'bool',
+    useOffset:'bool',
+    narrative: {
+        goto:'string',
+        winner:'string',
+        'part1-6': {winner: 'user|bot', option: 'A-D', response:'string'},
+        path: {duty:'number', courage:'number'},
+    },
+    games/*previous*/: {
         'gameKey(playerState)': {
             gameKey:'number',
-            update:'unix timestring',
+            gameState: 'in-progress|win|loose',
+            update/*completed|frozen*/:'unix timestring',
             opponent:'[{bot}||username||name,gameKey]',
             side:'string',
-            ships:'object',
+            ships:{'name':['sillhouette']},
             hits:'array',
             misses:'array',
             score:'number',
             damage: {
-                hits:'array',
+                hits:'array'/*from opponent's hits object*/,
                 health:'number',
             },
             narrative: {
-                goto:'string',
-                gotoNext:'string',
                 winner:'string',
                 'part1-6': {winner: 'user|bot', option: 'A-D'},
                 path: {duty:'number', courage:'number'},
             }
         },
     },
-    config:  {
-        boardDisplayConfig:'array',
-        storyMode:'bool'
-    }
 }
 
 const p2UserConfig = {

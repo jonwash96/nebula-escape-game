@@ -3,7 +3,8 @@ const startMenuOptions = document.querySelector('#start-menu div');
 const loadMenuOptions = document.querySelector('#load-menu div');
 const registration = document.getElementById('registration-modal');
 const modalUserNnumber = document.querySelector('.modal-user-number');
-const settingsPane = document.getElementById('settings-pane');
+const settingsPanel = document.getElementById('settings-panel');
+const storyModeSetting = document.getElementById('settings-storyMode');
 
 let numPlayers = 0;
 let playerNum = 0;
@@ -16,8 +17,9 @@ document.addEventListener('click', (e) => {
         case '2_Player': numPlayers = 2; playerNum++; registration.classList.toggle('hide'); console.log(numPlayers, playerNum); break;
         case 'Load': loadMenuOptions.classList.toggle('expand'); break;
         case 'Rules': element.classList.toggle('expand'); break;
-        case 'Game Setup': settingsPane.classList.toggle('hide'); break;
+        case 'Game Setup': settingsPanel.classList.toggle('hide'); break;
         case 'Clear': localStorage.clear(); sessionStorage.clear(); break; //!
     }
     modalUserNnumber.textContent = `Player # ${playerNum}/${numPlayers}`
+    if (numPlayers===2 && storyModeSetting.checked) {document.getElementById('story-mode-notify').style.display = 'inline'}
 })

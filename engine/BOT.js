@@ -1,4 +1,4 @@
-import { ships } from "../game/ships.js";
+import Ships from "../../components/Ships/ships.js";
 import Board from "../../components/board/Board.js";
 
 export default class BOT {
@@ -8,9 +8,10 @@ export default class BOT {
         this.difficulty = botConfig.difficulty;
         this.side = botConfig.side || 'enemy';
         this.gameKey = botConfig.gameKey;
-        this.ships = botConfig.ships || Object(ships[botConfig.side]);
+        this.shipsClass = new Ships(botConfig);
+        this.ships = this.shipsClass.ships;
         
-        this.board = new Board (boardEl, options);
+        this.board = new Board (boardEl, botConfig.board, options);
         this.board.mode('enable-bot-board');
     }
 
@@ -58,15 +59,15 @@ export default class BOT {
                     let hoverCells, cell;
                     while (count < 100) {
                         const random = randomCell();
-                        cell = this.board.cells[random]
+                        cell = this.board.cells[random];
                         // console.log("Cell ID to place: ",random, cell) //!
-                        hoverCells = this.board.hoverSillhouette([cell])
+                        hoverCells = this.board.hoverSillhouette([cell.target])
                         // console.log("HOVERCELLS", hoverCells) //!
-                        const impeded = hoverCells.some(cell=>cell.classList.contains('impededCell')) ? true : false;
+                        const impeded = hoverCells.some(cell=>cell.target.classList.contains('impededCell')) ? true : false;
                         const outOfBounds = hoverCells.length < ship.area();
                         if (!impeded && !outOfBounds) {
                             // console.log("Try place cells:", hoverCells) //!
-                            resolve( this.board.placeShip({target:cell}) )
+                            resolve( this.board.placeShip({target:cell.target}) )
                         } else count++;
                     } reject("count: "+count);
                 })

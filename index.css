@@ -3,6 +3,8 @@ body {
     color: white;
 }
 
+ul {list-style: none;}
+
 #battleships-subhead {
     font-size: 24pt;
     text-align: center;
@@ -50,6 +52,19 @@ body {
 .expand {
     width:70% !important;
     height:100% !important;
+}
+
+#settings-panel {
+    & label {
+        font-weight: 200;
+        & strong {font-weight:800;}
+        & input[type=number] {
+            background: var(--midnight);
+            color:white;
+            border:none;
+            margin:0 0.5em;
+        }
+    }
 }
 
 #registration-modal {

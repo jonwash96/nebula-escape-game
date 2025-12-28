@@ -1,10 +1,12 @@
 /* GLOBAL STYLES*/
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
 * {
     box-sizing: border-box;
 
     --dblue: #000124;
     --steelblue: #003c5f;
     --cyan: rgb(0, 195, 255);
+    --lcyan: #8bf;
     --dustycyan: rgb(100, 175, 205);
     --gold: #f9c31b;
     --dgold: #c9a300;
@@ -12,10 +14,11 @@
     --blue: #13f;
     --midnight: #0f1e2f;
     --red: #f00;
+    --lred: #f88;
 
     --dblue-steelblue: linear-gradient(to bottom right, var(--dblue), var(--steelblue));
 
-    font-family: Montserrat;
+    font-family: Montserrat, Arial, sans-serif;
 }
 
 /* COLORWAYS */
@@ -55,6 +58,17 @@
         transform: translate(-57px, -22px);
     }
  }
+
+ .textbox {
+        width:100%;
+        height:3em;
+        background-color: var(--midnight);
+        font-weight: 500;
+        color:white;
+        border:.5px solid var(--gold);
+        padding:3px 6px;
+        margin:6px 0 18px 0;
+    }
 
 nav {
     position:absolute;

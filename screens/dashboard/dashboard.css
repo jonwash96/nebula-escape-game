@@ -72,18 +72,17 @@ main {
     }
 
     #p1-summary-text-overlay {grid-area:p1-summary;}
-    #p1-status-text-overlay {grid-area:p1-status;}
-
+    
     #p1-ships-text-overlay {
         grid-area:p1-ships;
         text-align: left;
-
+        
         & .ships {
             display: grid;
             grid-template: 25% 23% 22% 15% 15% / auto;
             height: 98%;
             /* border: 1px solid violet; */
-
+            
             & svg.brkt-placed-ship {opacity:0.5;}
             & svg {
                 fill: var(--dblue);
@@ -91,13 +90,13 @@ main {
                 pointer-events: none;
             }
         }
-
+        
         & .ships.enemy {
-            #borgCube-svg {height:100%;}
-            #capitalShip-svg {height:100%;}
-            #bird-of-prey-svg {height:100%;}
-            #mars-shuttle-svg {height:95%;}
-            #snakehead-svg {height:80%;}
+            & #borgCube-svg {height:100%;}
+            & #capitalShip-svg {height:100%;}
+            & #bird-of-prey-svg {height:100%;}
+            & #mars-shuttle-svg {height:95%;}
+            & #snakehead-svg {height:80%;}
         }
         
         & .ships.starfleet {
@@ -107,39 +106,72 @@ main {
             height: 98%; */
             
             & .ship svg {rotate: 180deg;}
-            #enterprise-svg {height:100%;}
-            #titan-svg {height:100%;}
-            #wallenberg-svg {height:100%;}
-            #lasirena-svg {height:90%;}
-            #shuttle-svg {height:80%;}
+            & #enterprise-svg {height:100%;}
+            & #titan-svg {height:100%;}
+            & #wallenberg-svg {height:100%;}
+            & #lasirena-svg {height:90%;}
+            & #shuttle-svg {height:80%;}
         }
         
         & #p1-ships-btn {transform:translate(5.5vw, -130%);}
     }
 
-    @media screen and (min-width: 1700px) {
-        #p1-ships-text-overlay {
-            grid-area:p1-ships;
+    #p1-status-text-overlay {
+        grid-area:p1-status;
+        text-align: left;
 
-            & .ships.enemy {
-                display: flex;
+        & * {padding:0;margin:0;}
+
+        & h4 {
+            margin:0;
+            line-height:1em;
+            /* border:1px solid green; */
+        }
+
+        & .targeting-panel {
+            display: grid;
+            grid-template: 15% 17% 16% 16% 16% 16% / auto;
+            height: 100%;
+            /* border: 1px solid violet; */
+            
+            & svg {
+                fill: var(--dblue);
+                pointer-events: none;
+            }
+        }
+
+        & .targeting-group {
+            display:grid;
+            grid-template: 100% / 1fr 2fr;
+
+            & .weapons {
+                margin-left:12px;
+                display:flex;
                 flex-direction: row;
                 justify-content: flex-start;
-                align-items: flex-start;
-                flex-wrap: wrap;
-                height: 98%;
-                /* border: 1px solid violet; */
-
-                & .ship {max-width:100px;}
-
-                #borgCube {width:100px;}
-                #capitalShip {width:80px;}
-                #bird-of-prey {width:60%;}
-                #mars-shuttle {width:45%;}
-                #snakehead {width:40%;}
+                gap: 6px;;
             }
+        }
 
-            & #p1-ships-btn {transform:translate(128px, -130%);}
+        & .weapon-symbol svg {height:100%;fill:var(--dblue);}
+        & .weapon-symbol:hover svg {cursor:pointer;fill:var(--blue);}
+        
+        & .targeting-panel.enemy {
+            & #borgCube-svg {height:100%;}
+            & #capitalShip-svg {height:100%;}
+            & #bird-of-prey-svg {height:100%;}
+            & #mars-shuttle-svg {height:95%;}
+            & #snakehead-svg {height:80%;}
+        }
+        
+        & .targeting-panel.starfleet {
+            /* & div {border:1px solid blue;height:100%;} */
+            & .ship svg {rotate: 180deg;}
+            & #enterprise-svg {height:100%;}
+            & #titan-svg {height:100%;}
+            & #wallenberg-svg {height:100%;}
+            & #lasirena-svg {height:90%;}
+            & #shuttle-svg {height:100%;}
         }
     }
 
@@ -164,11 +196,11 @@ main {
             }
 
             & .ships.starfleet {
-                #enterprise-svg {height:100%;}
-                #titan-svg {height:100%;}
-                #wallenberg-svg {height:100%;}
-                #lasirena-svg {height:90%;}
-                #shuttle-svg {height:80%;}
+                & #enterprise-svg {height:100%;}
+                & #titan-svg {height:100%;}
+                & #wallenberg-svg {height:100%;}
+                & #lasirena-svg {height:90%;}
+                & #shuttle-svg {height:80%;}
             }
 
             & .ships.enemy {
@@ -210,9 +242,9 @@ main {
     grid-template-rows: 30% auto 30%;
     gap: 1em;
     grid-template-areas: 
-    "p1-summary p1-summary . p2-summary p2-summary"
-    "p1-ships board board board p2-ships"
-    "p1-status p1-status . p2-status p2-status";
+        "p1-summary p1-summary . p2-summary p2-summary"
+        "p1-ships board board board p2-ships"
+        "p1-status p1-status . p2-status p2-status";
     opacity:75%;
 
 
@@ -299,3 +331,12 @@ main {
     }
     
 }
+
+dialog {
+    width: 480px;
+    border: 1px solid var(--gold);
+    text-align: center;
+
+    & button {margin-top:2em;}
+}
+dialog::backdrop {background: #5005;}

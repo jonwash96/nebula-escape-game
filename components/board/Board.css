@@ -66,10 +66,17 @@
 }
 
 .hoverCell {background-color: var(--cyan);}
+.hoverCell:hover {background-color: var(--lcyan) !important;}
 .activeCell {background-color: var(--blue);}
 .committedCell {background-color: var(--blue);}
+.committedCell:hover {background-color: var(--lcyan) !important;}
 .impededCell {background-color: var(--red);}
 .forbiddenCell {background-color: var(--red);} 
+.targetedCell {
+    border: 1px solid var(--red);
+    background-color: var(--red);
+    &:hover {background-color:var(--lred) !important;}
+}
 
 .Board header, .Board footer {
     font-size: 0.5em;
@@ -112,7 +119,7 @@
 
 .targeting-brackets {
     position: absolute;
-    transform: translate(-130%, -98%);
+    transform: translate(-50%, -65%);
     pointer-events: none;
     /* border: 1px solid red; */
     z-index:1;

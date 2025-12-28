@@ -10,32 +10,55 @@
     <script defer type="module" src="./dashboard.js"></script>
 </head>
 <body>
-    <!-- <section id="load-targeting-system"></section> -->
+    <dialog id="db-info-modal" class="midnight">
+        <h1>Title</h1>
+        <h2>Subheadding</h2>
+        <p>Text Content</p>
+        <div class="btn-block">
+            <button type="button" class="tile-btn blue clickable">Ok</button>
+        </div>
+    </dialog>
+    <dialog id="db-switch-user-modal" class="midnight">
+        <h1>Switch User</h1>
+        <h2>player name</h2>
+        <p></p>
+        <input type="password" class="textbox" />
+        <div class="btn-block">
+            <button type="button" class="tile-btn blue clickable">Ok</button>
+        </div>
+    </dialog>
+
     <main>
+        <section id="load-targeting-system"></section>
         <section id="p1-board" class=""></section> 
         <section id="p2-board" class=""></section>
     </main>
     <div id="db-text-overlay">
         <header id="game-status-header" class="header"></header>
-        <div id="p1-summary-text-overlay">summ.e</div>
-        <div id="p2-summary-text-overlay">summ.u</div>
+
+        <div id="p1-summary-text-overlay">summ</div>
         <div id="p1-ships-text-overlay">
-
             <div class="ships"></div>
-            <div class="projections"></div>
-
             <button id="p1-ships-btn" type="button" class="tile-btn-mini hide">Done</button>
         </div>
+        <div id="p1-status-text-overlay">
+            <div class="targeting-panel">
+                <h4>TARGETING</h4>
+            </div>
+        </div>
+
+        <div id="p2-summary-text-overlay">summ</div>
         <div id="p2-ships-text-overlay">
-
             <div class="ships"></div>
-            <div class="projections"></div>
-
             <button id="p2-ships-btn" type="button" class="tile-btn-mini hide">Done</button>
         </div>
-        <div id="p1-status-text-overlay">status.e</div>
-        <div id="p2-status-text-overlay">status.u</div>
+        <div id="p2-status-text-overlay">
+            <div class="targeting-panel">
+                <h4>Targeting</h4>
+            </div>
+        </div>
     </div>
+
     <div id="db-grid-container">
         <div id="bracket-container" class="component-container">
             <div id="brkt-offence-summary" class="db-bracket left">
