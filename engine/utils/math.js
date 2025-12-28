@@ -39,7 +39,7 @@ function rayIntersectsCell(origin, dir, cellMin, cellMax) {
 }
 
 // Handmade Parser for AI built function
-function rayIntersect(boardNum, origin, target, testPoint) {
+function rayIntersect(originBoardNum, origin, target, testPoint) {
   const parse = (strNum) => Object({ x: Number(strNum.slice(0,2)), y: Number(strNum.slice(-2)) });
 
   const p1ToGlobal = (obj) => Object({ x:obj.x, y: - obj.y });
@@ -49,26 +49,26 @@ function rayIntersect(boardNum, origin, target, testPoint) {
   const norm = (obj) => Object({ x:obj.x / len(obj.x), y:obj.y / len(obj.y) });
 
   const rayDir = () => {
-    return boardNum===1 && norm( Object({ 
+    return originBoardNum===1 && norm( Object({ 
       x:p1ToGlobal(parse(target)).x - p1ToGlobal(parse(origin)).x, 
       y:p1ToGlobal(parse(target)).y - p1ToGlobal(parse(origin)).y }) ) ||
-    boardNum===2 && norm( Object({ 
+    originBoardNum===2 && norm( Object({ 
       x:p2ToGlobal(parse(target)).x - p2ToGlobal(parse(origin)).x, 
       y:p2ToGlobal(parse(target)).y - p2ToGlobal(parse(origin)).y }) )
   }
 
   const cellMin = () => {
-    return boardNum===1 && Object({ x:p1ToGlobal(parse(testPoint)).x, y:p1ToGlobal(parse(testPoint)).y }) ||
-           boardNum===2 && Object({ x:p2ToGlobal(parse(testPoint)).x, y:p2ToGlobal(parse(testPoint)).y })
+    return originBoardNum===1 && Object({ x:p1ToGlobal(parse(testPoint)).x, y:p1ToGlobal(parse(testPoint)).y }) ||
+           originBoardNum===2 && Object({ x:p2ToGlobal(parse(testPoint)).x, y:p2ToGlobal(parse(testPoint)).y })
   }
 
   const cellMax = () => {
-    return boardNum===1 && Object({ x:p1ToGlobal(parse(testPoint)).x + 1, y:p1ToGlobal(parse(testPoint)).y + 1 }) ||
-           boardNum===2 && Object({ x:p2ToGlobal(parse(testPoint)).x + 1, y:p2ToGlobal(parse(testPoint)).y + 1 })
+    return originBoardNum===1 && Object({ x:p1ToGlobal(parse(testPoint)).x + 1, y:p1ToGlobal(parse(testPoint)).y + 1 }) ||
+           originBoardNum===2 && Object({ x:p2ToGlobal(parse(testPoint)).x + 1, y:p2ToGlobal(parse(testPoint)).y + 1 })
   }
 
-  return boardNum===1 && rayIntersectsCell( p1ToGlobal(parse(origin)), rayDir(), cellMin(), cellMax() ) || 
-         boardNum===2 && rayIntersectsCell( p2ToGlobal(parse(origin)), rayDir(), cellMin(), cellMax() )
+  return originBoardNum===1 && rayIntersectsCell( p1ToGlobal(parse(origin)), rayDir(), cellMin(), cellMax() ) || 
+         originBoardNum===2 && rayIntersectsCell( p2ToGlobal(parse(origin)), rayDir(), cellMin(), cellMax() )
 }
 
 export { parallax, remap, rayIntersect, cellDistance, parse };

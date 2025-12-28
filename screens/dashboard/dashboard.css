@@ -170,18 +170,17 @@ main {
             & #enterprise-svg {height:100%;}
             & #titan-svg {height:100%;}
             & #wallenberg-svg {height:100%;}
-            & #lasirena-svg {height:90%;}
-            & #shuttle-svg {height:100%;}
+            & #lasirena-svg {height:100%;}
+            & #shuttle-svg {height:80%;}
         }
     }
 
     #p2-summary-text-overlay {grid-area:p2-summary;text-align: right;}
-    #p2-status-text-overlay {grid-area:p2-status;text-align: right;}
-
+    
     #p2-ships-text-overlay {
         grid-area:p2-ships;
         text-align: right;
-
+        
         & .ships {
             display: grid;
             grid-template: 25% 23% 22% 15% 15% / auto;
@@ -194,7 +193,7 @@ main {
                 height:100%; 
                 pointer-events: none;
             }
-
+            
             & .ships.starfleet {
                 & #enterprise-svg {height:100%;}
                 & #titan-svg {height:100%;}
@@ -202,22 +201,82 @@ main {
                 & #lasirena-svg {height:90%;}
                 & #shuttle-svg {height:80%;}
             }
-
+            
             & .ships.enemy {
                 gap:.5em;
                 & .ship svg {rotate: 180deg;}
             }
         }
-
+        
         & #p2-ships-btn {transform:translate(-130px, -130%)}
     }
-
+    
     & div {
         /* border:1px solid yellow; */
         position:relative;
         padding: 2%;
         color:var(--midnight);
     }
+}
+
+#p2-status-text-overlay {
+    grid-area:p2-status;
+    text-align: right;
+
+    & * {padding:0;margin:0;}
+
+        & h4 {
+            margin:0;
+            line-height:1em;
+            /* border:1px solid green; */
+        }
+
+        & .targeting-panel {
+            display: grid;
+            grid-template: 15% 17% 16% 16% 16% 16% / auto;
+            height: 100%;
+            /* border: 1px solid violet; */
+            
+            & svg {
+                fill: var(--dblue);
+                pointer-events: none;
+            }
+        }
+
+        & .targeting-group {
+            display:flex;
+            /* grid-template: 100% / 1fr 2fr; */
+            flex-direction: row-reverse;
+
+            & .weapons {
+                margin-right:12px;
+                display:flex;
+                flex-direction: row;
+                justify-content: flex-start;
+                gap: 6px;;
+            }
+        }
+
+        & .weapon-symbol svg {height:100%;fill:var(--dblue);}
+        & .weapon-symbol:hover svg {cursor:pointer;fill:var(--blue);}
+        
+        & .targeting-panel.enemy {
+            & #borgCube-svg {height:100%;}
+            & #capitalShip-svg {height:100%;}
+            & #bird-of-prey-svg {height:100%;}
+            & #mars-shuttle-svg {height:95%;}
+            & #snakehead-svg {height:80%;}
+        }
+        
+        & .targeting-panel.starfleet {
+            /* & div {border:1px solid blue;height:100%;} */
+            /* & .ship svg {rotate: 180deg;} */
+            & #enterprise-svg {height:100%;}
+            & #titan-svg {height:100%;}
+            & #wallenberg-svg {height:100%;}
+            & #lasirena-svg {height:100%;}
+            & #shuttle-svg {height:100%;}
+        }
 }
 
 #db-grid-container {

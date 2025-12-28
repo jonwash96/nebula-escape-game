@@ -147,6 +147,7 @@ export default class Board {
 				this.brackets.classList.remove('hide');
 			} break;
 			case 'targeting': {
+				this.activeCells = [];
 				this.follow = true; 
 				this.disc.classList.remove('hide');
 				this.crosshairs.forEach(el=>el.classList.remove('hide'));
@@ -165,6 +166,10 @@ export default class Board {
 			case 'subspace': { 
 				Object.values(this.cells).forEach(cell => {
 				if (cell.committedCell) cell.target.classList.remove('committedCell') })
+			} break;
+			case 'toggle-subspace': { 
+				Object.values(this.cells).forEach(cell => {
+				if (cell.committedCell) cell.target.classList.toggle('committedCell') })
 			} break;
 			default: {return this.status.mode}
         }
@@ -304,19 +309,51 @@ export default class Board {
 		
 	}
 
+	placeItem = {
+		item:null,
+		resolve:null,
+		reject:null,
+		data:null,
+		done(data){resolve(data); this.clear()},
+		abort(data){reject(data); this.clear()},
+		clear() {['item','resolve','reject','data'].forEach(i=>this[i] = null)},
+		set(item,resolve,reject,data) {
+			['item','resolve','reject','data']
+				.forEach((a,i)=>this[a] = arguments[i]);
+			console.log("item recieved:", item);
+		}
+	}
+
 	placeShot(e) {
-		// if (!this.weaponToPlace) return;
+		// if (!this.placeItem.item) return;
 		if (!e.target.classList.contains('cell')) return;
 
-		if (!e.target.classList.contains('targetedCell')) {
-			console.log("Shot Removed from ", e.target.id);
-			e.target.classList.add('targetedCell');
-			// e.target.id.classList.add(this.weaponToPlace.className);
-		} else {
-			console.log("Shot Placed on ", e.target.id);
+		if (e.target.classList.contains('targetedCell')) {
 			e.target.classList.remove('targetedCell');
+			e.target.removeAttribute('weapon');
+			e.target.removeAttribute('originCell');
+			this.activeCells.splice(indexOf(e.target.id), 1);
+			console.log("Shot Removed from ", e.target.id);
+		} else {
+			e.target.classList.add('targetedCell');
+			e.target.setAttribute('weapon', this.placeItem.item);
+			e.target.setAttribute('originCell', this.placeItem.data);
+			this.activeCells.push(this.cells[e.target.id]);
+			console.log("Shot Placed on ", e.target.id);
 		}
+		return this.placeItem.done(e.target.id);
+	}
 
+	async handleFire(ships, resolve) {
+		const delay = () => new Promise((geaux)=>setTimeout(()=>geaux(),600));
+		for (let cell of activeCells) {
+			const weapon = cell.getAttribute('weapon');
+			const originCell = cell.getAttribute('originCell');
+			const originBoardNum = this.boardNumber===1 ? 2 : 1; 
+			weapon.fire(originBoardNum, originCell, cell, ships);
+			await delay();
+		};
+		resolve();
 	}
 
     update() {

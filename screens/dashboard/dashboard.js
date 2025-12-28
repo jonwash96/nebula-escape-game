@@ -97,6 +97,7 @@ const buttons = {
     pause: document.getElementById('btn-pause'),
     orient: document.getElementById('btn-orient'),
     switchUser: document.getElementById('btn-switch-user'),
+    toggleSubspace: document.getElementById('toggle-subspace'),
     turnTimer: {
         target: document.getElementById('turn-timer'),
         start() {
@@ -110,6 +111,7 @@ const buttons = {
 // FUNC
 let autoLoadShipsCurry = () => {};
 let readyPlayerX = () => {};
+let setWeaponCurry = () => {};
 
 async function placeShipsClick(e) {
     const which = e.target.getAttribute('owner').match('p1') ? p1 : p2;
@@ -140,6 +142,7 @@ async function autoLoadShips(player) {
             await new Promise((resolve,reject) => {
                 setTimeout(()=>player.board.setShipToPlace(allShips[keys[i]],resolve,reject), 50);
             });
+            allShips[keys[i]].classList.add('brkt-placed-ship');
             console.log("Ship's placement location", allShips[keys[i]]);
         }
     }
@@ -200,6 +203,38 @@ function setActiveBoard(player,activeBoardMode, otherBoardMode) {
     }
 }
 
+function setWeapon(e, weapon) {
+    // Take in a weapon from click handler & ref to ships_store.
+    // Pass them to the opponet board (activeBoard) via a promise.
+    // Main & text-overlay receive a hover class that changes the cursor to something.
+    // The active weapon stays highlighted until resolve or reject.
+    // Every time, before the receiver function runs, a newWeaponSet function runs, 
+        // performing the previous reject function, if set.
+        // This is to trigger the previous weapon button to revert to its inactive state.
+    // The board handles updating the count with its reference to ships_store
+    // We can use the mousemove listener, when in this mode, to update the count on the dashboard
+
+    const originCell = () => {
+        const player = status.gamestate.turn.player;
+        const id = player.ships[e.target.title].location[0];
+        return player.cells[id];
+    };
+
+    status.gameState.turn = p1
+        ? p2.board.placeItem.set(weapon, resolve, reject, originCell())
+        : p1.board.placeItem.set(weapon, resolve, reject, originCell());
+
+}
+
+async function handleFire() {
+    await new Promise((resolve) => {
+        mode('fire'); // Handle subspace
+        status.gameState.turn = p1 
+            ? p2.board.handeFire(p2.player.ships, resolve) 
+            : p1.board.handeFire(p1.player.ships, resolve);
+    })
+}
+
 
 // INIT
 async function init() {
@@ -237,6 +272,12 @@ async function init() {
     // EVENT LISTENERS
     for (let modal in modals) {modals[modal].listen()};
     buttons.switchUser.addEventListener('click', modals.switchUser.show.bind(modals.switchUser));
+    buttons.toggleSubspace.addEventListener('click', ()=>{
+        status.gameState.turn === p1
+            ? p1.board.mode('toggle-subspace')
+            : p2.board.mode('toggle-subspace');
+    });
+    buttons.fire.addEventListener('click', handleFire);
 
     // INIT PLAYER SPECIFFIC ITEMS
     [p1,p2].forEach(player => {
@@ -366,8 +407,9 @@ async function mode(option,player,data) {
         case 'ready': { player.status = 'ready';
             if (p1.status === 'ready' && p2.status === 'ready') {
                 saveState('full');
-                if (getState('storyModePlayer')) gotoNarrative();
-                    else mode('begin-game');
+                getState('storyModePlayer')
+                ? gotoNarrative()
+                : mode('place-ships');
             };
         } break;
         case 'begin-game': { headerEl.innerHTML = "loading. . .";
@@ -480,11 +522,11 @@ function checkGameState() {
                 }), {[p1.player.name]:0,[p2.player.name]:0});
             if (Object.values(reduction).some(result=>result===5)) {
                 status.gameState.winner = status.gameState.turn;
-                status.gameState.winner = true;
+                status.gameState.winGame = true;
                 status.gameState.goto = 'summary';
                 saveState('full');
                 winGame();
-                gotoNarrative(/*victoryInSight*/);
+                gotoNarrative(/*Q's Riddle*/);
             }
         } break;
     }
