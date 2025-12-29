@@ -14,7 +14,6 @@ export default class Player {
         this.gameKey = userConfig.gameKey;
         this.shipsClass = new Ships(userConfig);
         this.ships = this.shipsClass.ships;
-        console.log('PLAYER SHIPS: ', this.ships)
         this.storyMode = userConfig.storyMode;
         this.narrative = userConfig.narrative;
         this.games = userConfig.games;

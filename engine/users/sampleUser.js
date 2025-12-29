@@ -17,7 +17,7 @@ const userName = {
     storageEnabled:'bool',
     storyMode:'bool',
     turnTimer:'string',
-    useRightSide:'bool',
+    useRightSide: 'bool',
     useOffset:'bool',
     narrative: {
         goto:'string',

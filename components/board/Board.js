@@ -19,6 +19,7 @@ export default class Board {
 
     // STATIC
 	static colRow = [['A', 1], ['B', 2], ['C', 3], ['D', 4], ['E', 5], ['F', 6], ['G', 7], ['H', 8], ['I', 9], ['J', 10], ['K', 11], ['L', 12], ['M', 13], ['N', 14], ['O', 15], ['P', 16], ['Q', 17], ['R', 18], ['S', 19], ['T', 20], ['U', 21], ['V', 22], ['W', 23], ['X', 24], ['Y', 25], ['Z', 26]];
+	static dev_mode = false;
 
 	// PRIV
 	#restore;
@@ -92,12 +93,6 @@ export default class Board {
 		this.crosshairV['xpos'] = window.innerWidth / 2;
 		this.crosshairH['ypos'] = window.innerHeight / 2;
 
-		if (this.enableTargeting) {
-			this.brackets.classList.remove('hide');
-			this.disc.classList.remove('hide');
-			this.crosshairs.forEach(el=>el.classList.remove('hide'));
-		}
-
 		this.update();
 		resolve(console.log("Create Board number", this.boardNumber)) }); 
 	}
@@ -151,7 +146,7 @@ export default class Board {
 				this.follow = true; 
 				this.disc.classList.remove('hide');
 				this.crosshairs.forEach(el=>el.classList.remove('hide'));
-				this.brackets.classList.remove('hide');
+				// this.brackets.classList.remove('hide');
 				this.target.addEventListener('click', this.placeShot.bind(this));
 				this.mode('subspace');
 			} break;
@@ -214,6 +209,7 @@ export default class Board {
 			case 'd': {this.disc.classList.toggle('hide')} break;
 			case 'r': {this.shipRotation -= 90; this.shipRotation < 0 && (this.shipRotation = 360)} break;
 			case 'x': {if (this.mode()==='place-ships') {this.shipToPlace = null; this.doCleanCellResidue()}} break;
+			case 's': {this.root.classList.contains('active-board') && this.mode('toggle-subspace')} break;
 		}
 	}
 
@@ -309,14 +305,30 @@ export default class Board {
 		
 	}
 
+	signal = {
+		data:null,
+		resolve:null,
+		reject:null,
+		set(resolve,reject){
+			this.resolve=resolve;
+			this.reject=reject;
+			console.log("signal recieved:", this.resolve, this.reject)
+		},
+		clear(){['data','resolve','reject']
+			.forEach(i=>i=null) }
+	}
+
 	placeItem = {
 		item:null,
 		resolve:null,
 		reject:null,
 		data:null,
-		done(data){resolve(data); this.clear()},
-		abort(data){reject(data); this.clear()},
-		clear() {['item','resolve','reject','data'].forEach(i=>this[i] = null)},
+		count:0,
+		self:this,
+		next(max,data){this.count===max && this.done(data)},
+		done(data){this.resolve(data); this.clear()},
+		abort(data){this.reject(data); this.clear()},
+		clear() {['item','resolve','reject','data'].forEach(i=>this[i] = null); this.count=0},
 		set(item,resolve,reject,data) {
 			['item','resolve','reject','data']
 				.forEach((a,i)=>this[a] = arguments[i]);
@@ -325,23 +337,29 @@ export default class Board {
 	}
 
 	placeShot(e) {
-		// if (!this.placeItem.item) return;
 		if (!e.target.classList.contains('cell')) return;
+		if (this.placeItem.item.remaining === this.placeItem.item.max)
+				return this.placeItem.abort(this.placeItem.count);
 
-		if (e.target.classList.contains('targetedCell')) {
-			e.target.classList.remove('targetedCell');
-			e.target.removeAttribute('weapon');
-			e.target.removeAttribute('originCell');
-			this.activeCells.splice(indexOf(e.target.id), 1);
-			console.log("Shot Removed from ", e.target.id);
-		} else {
+		if (this.placeItem.item && !e.target.classList.contains('targetedCell')) {
+			this.placeItem.count++;
+			this.signal.resolve(this.placeItem.count, this.placeItem.item);
 			e.target.classList.add('targetedCell');
 			e.target.setAttribute('weapon', this.placeItem.item);
 			e.target.setAttribute('originCell', this.placeItem.data);
 			this.activeCells.push(this.cells[e.target.id]);
 			console.log("Shot Placed on ", e.target.id);
+		} else {
+			const weapon = e.target.getAttribute('weapon');
+			this.placeItem.count--;
+			this.signal.reject(this.placeItem.count, weapon);
+			e.target.classList.remove('targetedCell');
+			e.target.removeAttribute('weapon');
+			e.target.removeAttribute('originCell');
+			this.activeCells.splice(indexOf(e.target.id), 1);
+			console.log("Shot Removed from ", e.target.id);
 		}
-		return this.placeItem.done(e.target.id);
+		return this.placeItem.next(this.placeItem.item.max, true);
 	}
 
 	async handleFire(ships, resolve) {

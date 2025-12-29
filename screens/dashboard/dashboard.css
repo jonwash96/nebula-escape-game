@@ -71,6 +71,13 @@ main {
         font-size: 32pt;
     }
 
+    & div {
+        /* border:1px solid yellow; */
+        position:relative;
+        padding: 2%;
+        color:var(--midnight);
+    }
+
     #p1-summary-text-overlay {grid-area:p1-summary;}
     
     #p1-ships-text-overlay {
@@ -100,17 +107,13 @@ main {
         }
         
         & .ships.starfleet {
-            /* display: grid;
-            grid-template: 25% 23% 22% 15% 15% / auto;
-            gap:.5em;
-            height: 98%; */
             
             & .ship svg {rotate: 180deg;}
             & #enterprise-svg {height:100%;}
             & #titan-svg {height:100%;}
             & #wallenberg-svg {height:100%;}
-            & #lasirena-svg {height:90%;}
-            & #shuttle-svg {height:80%;}
+            & #lasirena-svg {height:100%;}
+            & #shuttle-svg {height:70%;}
         }
         
         & #p1-ships-btn {transform:translate(5.5vw, -130%);}
@@ -151,10 +154,16 @@ main {
                 justify-content: flex-start;
                 gap: 6px;;
             }
+
+            & .weapon-symbol svg {height:100%;fill:var(--dblue);}
+            & .weapon-symbol:hover svg {cursor:pointer;fill:var(--dgold);}
+
+            & .selected-weapon svg {fill: var(--blue);}
+            & .depleted-weapon svg {fill:var(--red); opacity:.5; pointer-events: none;}
+            & .maxed-weapon svg {opacity:.5; pointer-events: none;}
+            & .maxed-weapon:hover svg {fill:var(--red);opacity:.5; pointer-events: none;}
         }
 
-        & .weapon-symbol svg {height:100%;fill:var(--dblue);}
-        & .weapon-symbol:hover svg {cursor:pointer;fill:var(--blue);}
         
         & .targeting-panel.enemy {
             & #borgCube-svg {height:100%;}
@@ -198,8 +207,8 @@ main {
                 & #enterprise-svg {height:100%;}
                 & #titan-svg {height:100%;}
                 & #wallenberg-svg {height:100%;}
-                & #lasirena-svg {height:90%;}
-                & #shuttle-svg {height:80%;}
+                & #lasirena-svg {height:100%;}
+                & #shuttle-svg {height:70%;}
             }
             
             & .ships.enemy {
@@ -211,26 +220,18 @@ main {
         & #p2-ships-btn {transform:translate(-130px, -130%)}
     }
     
-    & div {
-        /* border:1px solid yellow; */
-        position:relative;
-        padding: 2%;
-        color:var(--midnight);
-    }
-}
-
-#p2-status-text-overlay {
-    grid-area:p2-status;
-    text-align: right;
-
-    & * {padding:0;margin:0;}
-
+    #p2-status-text-overlay {
+        grid-area:p2-status;
+        text-align: right;
+    
+        & * {padding:0;margin:0;}
+    
         & h4 {
             margin:0;
             line-height:1em;
             /* border:1px solid green; */
         }
-
+    
         & .targeting-panel {
             display: grid;
             grid-template: 15% 17% 16% 16% 16% 16% / auto;
@@ -242,12 +243,12 @@ main {
                 pointer-events: none;
             }
         }
-
+    
         & .targeting-group {
             display:flex;
             /* grid-template: 100% / 1fr 2fr; */
             flex-direction: row-reverse;
-
+    
             & .weapons {
                 margin-right:12px;
                 display:flex;
@@ -256,7 +257,7 @@ main {
                 gap: 6px;;
             }
         }
-
+    
         & .weapon-symbol svg {height:100%;fill:var(--dblue);}
         & .weapon-symbol:hover svg {cursor:pointer;fill:var(--blue);}
         
@@ -277,7 +278,9 @@ main {
             & #lasirena-svg {height:100%;}
             & #shuttle-svg {height:100%;}
         }
+    }
 }
+
 
 #db-grid-container {
     position:relative;
@@ -313,28 +316,12 @@ main {
     & svg {fill:var(--cyan);z-index:0;}
 }
 
-#brkt-offence-summary {
-    grid-area: p1-summary;
-    background: transparent;
-}
-#brkt-p1-ships {
-    grid-area: p1-ships;
-}
-#brkt-p1-stats {
-    grid-area: p1-status;
-    background: transparent;
-}
-#brkt-defence-summary {
-    grid-area: p2-summary;
-    background: transparent;
-}
-#brkt-p2-ships {
-    grid-area: p2-ships;
-}
-#brkt-p2-stats {
-    grid-area: p2-status;
-    background: transparent;
-}
+#brkt-offence-summary {grid-area: p1-summary;background: transparent;}
+#brkt-p1-ships {grid-area: p1-ships;}
+#brkt-p1-stats {grid-area: p1-status;background: transparent;}
+#brkt-defence-summary {grid-area: p2-summary;background: transparent;}
+#brkt-p2-ships {grid-area: p2-ships;}
+#brkt-p2-stats {grid-area: p2-status;background: transparent;}
 
 
 #db-controls-grid {

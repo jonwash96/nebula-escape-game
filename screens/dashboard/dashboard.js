@@ -2,20 +2,36 @@ import Player from "../../game/Player.js";
 import BOT from "../../../engine/BOT.js";
 import { nav } from "../../nav_dev.js";nav();
 
+// MINI-MODS
+class Signal {
+    constructor(resolver,rejector,destination) {
+        this.resolver = resolver;
+        this.rejector = rejector;
+        this.destination = destination;
+    }
+    send() { const self = this;
+        new Promise((resolve,reject) => { console.log("Send Signal", this.resolver, this,this.rejector, this.destination)
+        const onResolve = (...args) => resolve(self.resolver(...args));
+        const onReject = (...args) => reject(self.rejector(...args));
+        this.destination.signal.set(onResolve,onReject);
+        })
+        // .then(()=>this.send())
+    }
+}
+
 // OBJ
-const status = {
+let status = {
     mode:null,
     gameKey:null,
-    gameState: {
-        shipsPlaced:false, firstBlood:false, firstSunkenShip:false, turningPoint:false, victoryInSight:false, winGame:false,
-        winner:null,
-        turn:null,
-        goto:'firstBlood',
-        turnsTaken: {
-            player1: [0,0], /*[turns taken, turns taken since last hit]*/
-            player2: [0,0],
-        },
-    }
+    shipsPlaced:false, firstBlood:false, firstSunkenShip:false, turningPoint:false, victoryInSight:false, winGame:false,
+    winner:null,
+    goto:'firstBlood',
+    activeBoard:null,
+    turn:null,
+    turnsTaken: {
+        player1: [0,0], /*[turns taken, turns taken since last hit]*/
+        player2: [0,0],
+    },
 };
 
 // DOM
@@ -48,8 +64,8 @@ const modals = {
             }
         },
         action(e) {
-            if (status.gameState?.turn?.player?.password) {
-                if (this.target.children[3].value === status.gameState?.turn?.player?.password) {
+            if (status.turn?.player?.password) {
+                if (this.target.children[3].value === status?.turn?.player?.password) {
                     this.target.close();
                 } else {
                     this.target.children[2].style.color = "#f66";
@@ -106,12 +122,13 @@ const buttons = {
         },
         reset() {this.target.textContent = '00:00.00'},
     },
+    enable(button){this[button].classList.replace('disabled', 'active')},
+    disable(button){this[button].classList.replace('active', 'disabled')},
 }
 
 // FUNC
 let autoLoadShipsCurry = () => {};
 let readyPlayerX = () => {};
-let setWeaponCurry = () => {};
 
 async function placeShipsClick(e) {
     const which = e.target.getAttribute('owner').match('p1') ? p1 : p2;
@@ -188,7 +205,7 @@ function gotoNarrative() {
 }
 
 function setActiveBoard(player,activeBoardMode, otherBoardMode) {
-    console.log("setActiveBoard("+player?.player?.name+")")
+    console.log("setActiveBoard("+player.name+")")
     player.board.root.classList.add('active-board');
     activeBoardMode && player.board.mode(activeBoardMode)
 
@@ -196,40 +213,97 @@ function setActiveBoard(player,activeBoardMode, otherBoardMode) {
         p2.board.root.classList.remove('active-board');
         otherBoardMode && p2.board.mode(otherBoardMode);
         p1.board.setBracketOffset('left');
+        status.activeBoard = p1.board;
     } else {
         p1.board.root.classList.remove('active-board');
         otherBoardMode && p1.board.mode(otherBoardMode);
         p2.board.setBracketOffset('right');
+        status.activeBoard = p2.board;
     }
 }
 
-function setWeapon(e, weapon) {
-    // Take in a weapon from click handler & ref to ships_store.
-    // Pass them to the opponet board (activeBoard) via a promise.
-    // Main & text-overlay receive a hover class that changes the cursor to something.
-    // The active weapon stays highlighted until resolve or reject.
-    // Every time, before the receiver function runs, a newWeaponSet function runs, 
-        // performing the previous reject function, if set.
-        // This is to trigger the previous weapon button to revert to its inactive state.
-    // The board handles updating the count with its reference to ships_store
-    // We can use the mousemove listener, when in this mode, to update the count on the dashboard
+const weapons = {
+    count:0,
+    max:5,
+    evt:null,
+    shipName() {return this.evt.target.getAttribute('for')},
+    weapon() {
+        const playerWeapons =  status.turn.player.ships[this.shipName()].weapons;
+        const weaponName = this.evt.target.title;
+        return playerWeapons[weaponName];
+    },
+    async set(e) {
+        console.log("weapons.set("+e+")");
+        if (!e.target.classList.contains('weapon-symbol')) return;
+        // this.evt = e; 
 
-    const originCell = () => {
-        const player = status.gamestate.turn.player;
-        const id = player.ships[e.target.title].location[0];
-        return player.cells[id];
-    };
+        const shipName = e.target.getAttribute('for');
 
-    status.gameState.turn = p1
-        ? p2.board.placeItem.set(weapon, resolve, reject, originCell())
-        : p1.board.placeItem.set(weapon, resolve, reject, originCell());
+        const weapon = () => {
+            const playerWeapons =  status.turn.player.ships[shipName].weapons;
+            const weaponName = e.target.title;
+            return playerWeapons[weaponName];
+        };
+        
+        if (weapon().remaining===0) return;
 
+        if (e.target.classList.contains('selected-weapon')) {
+            e.target.classList.remove('selected-weapon');
+            return;
+        } else {e.target.classList.add('selected-weapon')};
+    
+        const originCell = () => {
+            const player = status.turn.player; 
+            const id = player.ships[shipName].location[0];
+            return player.board.cells[id];
+        };
+    
+        const handleColor = (weaponMaxed) => {
+            console.log("handleColor()");
+            weaponMaxed && e.target.classList.add('maxed-weapon');
+            weapon().remaining===0
+                ? e.target.classList.replace('selected-weapon', 'depleated-weapon')
+                : e.target.classList.remove('selected-weapon');
+        };
+    
+        const checkDone = (option, count, weapon) => {
+            console.log("checkDone()");
+            console.log("weapon remaining: ", weapon.remaining);
+            switch (option) {
+                case 'add': { this.count++; 
+                    typeof weapon.remaining==='number' && (weapon.remaining--);
+                    if (this.count===this.max) { buttons.enable('fire'); handleColor();
+                        Array.from(status.turn.targetingPanel.children).forEach(weapon => {
+                            weapon.classList.remove('maxed-weapon')
+                        })
+                    };
+                    console.log("Placed: ", this.count, "Allowed: ", weapon.max, "Remaining: ",weapon.remaining)
+                } break;
+                case 'remove': {this.count--; weapon.remaining++} break;
+            }
+        };
+
+        new Signal(
+            (count,weapon)=>checkDone('add',count,weapon),
+            (count,weapon)=>checkDone('remove',count,weapon),
+            status.activeBoard
+        ).send();
+        
+        await new Promise((resolve,reject) => {
+            console.log("Promise Snet:",weapon(),originCell())
+            const onResolve = () => { handleColor(true); resolve() };
+            const onReject = () => { handleColor(); reject() };
+            status.activeBoard.placeItem.set(weapon(), onResolve, onReject, originCell());
+        });
+        console.log("Weapon Max Reached for turn.")
+    }
 }
 
 async function handleFire() {
+    weapons.count = 0;
     await new Promise((resolve) => {
         mode('fire'); // Handle subspace
-        status.gameState.turn = p1 
+        status.turn = p1 
             ? p2.board.handeFire(p2.player.ships, resolve) 
             : p1.board.handeFire(p1.player.ships, resolve);
     })
@@ -260,8 +334,6 @@ async function init() {
         p2.board = p2.player.board;
         await p2.board.render();
     }
-    console.log(p1.player)
-    console.log(p2.player)
 
     // REFF DOM
     console.log("Setup DOM");
@@ -273,7 +345,7 @@ async function init() {
     for (let modal in modals) {modals[modal].listen()};
     buttons.switchUser.addEventListener('click', modals.switchUser.show.bind(modals.switchUser));
     buttons.toggleSubspace.addEventListener('click', ()=>{
-        status.gameState.turn === p1
+        status.turn === p1
             ? p1.board.mode('toggle-subspace')
             : p2.board.mode('toggle-subspace');
     });
@@ -312,6 +384,7 @@ async function init() {
                     const img = document.createElement('div')
                         img.innerHTML = get(weapon.name);
                         img.setAttribute('title', weapon.name);
+                        img.setAttribute('for', ship.name);
                         img.classList.add('weapon-symbol');
                         weapons.appendChild(img);
                 })
@@ -356,7 +429,7 @@ function getState(option) {
             if (player2.location === 'local') {
                 p2.config = JSON.parse(localStorage.getItem(player2.user));
             } else {p2.config = JSON.parse(sessionStorage.getItem(player2.user))};
-            status.gameState = JSON.parse(sessionStorage.getItem('gameState'));
+            status = JSON.parse(sessionStorage.getItem('gameState'));
         } break;
     }
 }
@@ -372,7 +445,7 @@ function saveState(option) {
             if (p2.player.storageEnabled) {
                 localStorage.setItem(p2.player.username, JSON.stringify(p2.player))
             } else {sessionStorage.setItem(p2.player.username, JSON.stringify(p2.player))}
-            sessionStorage.setItem('gameState', JSON.stringify(status.gameState))
+            sessionStorage.setItem('gameState', JSON.stringify(status))
         } break;
         case 'player-lookup': {
             sessionStorage.setItem( 'player1', JSON.stringify({user:p1.config.username, location:p1.config.storageEnabled ? 'local' : 'session'}) );
@@ -420,9 +493,10 @@ async function mode(option,player,data) {
             mode('targeting',p1,p2);
         } break;
         case 'targeting': { headerEl.innerHTML = player.player.name+" Is Targeting"
-            status.turn = player;
+            status.turn = player; console.log("turn", status.turn.player)
             setActiveBoard(data.player, 'targeting', 'static');
-        }
+            player.targetingPanel.addEventListener('click', weapons.set.bind(weapons))
+        } break;
         case 'attack': { headerEl.innerHTML = player.player.name+" Is Attacking"
             
         } break;
@@ -435,11 +509,11 @@ async function mode(option,player,data) {
 }
 
 function checkGameState() {
-    console.log("################GAMESTATE##################")
+    console.log("################ GAMESTATE ##################")
     console.log("First Blood condition Result",
         "Reducer: ", [p1.player.hits,p2.player.hits].reduce((acc,current) => {
                     acc += Object.values(current).length },0),
-        "Logic: ",  !status.gameState.firstBlood
+        "Logic: ",  !status.firstBlood
     )
     console.log("firstSunkenShip condition Result",
         "Hits length Matches area?: ", [Object.values(p1.player.ships),Object.values(p2.player.ships)].forEach(player => {
@@ -463,16 +537,17 @@ function checkGameState() {
                     if (ship.hits.length === ship.area()) acc[player.name]++
                 }), {[p1.player.name]:0,[p2.player.name]:0})
     )
+    console.log("################### END #####################")
     return;
 
-    switch (status.gameState.goto) {
+    switch (status.goto) {
         case 'firstBlood': {
                 if ( [p1.player.hits,p2.player.hits].reduce((acc,current) => {
                     acc += Object.values(current).length },0)
-                > 1 && !status.gameState.firstBlood ) {
-                    status.gameState.winner = status.gameState.turn;
-                    status.gameState.firstBlood = true; 
-                    status.gameState.goto = 'firstSunkenShip';
+                > 1 && !status.firstBlood ) {
+                    status.winner = status.turn;
+                    status.firstBlood = true; 
+                    status.goto = 'firstSunkenShip';
                     saveState('full');
                     gotoNarrative(/*part2*/) }
             } break;
@@ -480,9 +555,9 @@ function checkGameState() {
             [Object.values(p1.player.ships),Object.values(p2.player.ships)].forEach(player => {
                 player.forEach(ship => {
                     if (ship.hits.length === ship.area()) {
-                        status.gameState.winner = status.gameState.turn;
-                        status.gameState.firstSunkenShip = true;
-                        status.gameState.goto = 'turningPoint';
+                        status.winner = status.turn;
+                        status.firstSunkenShip = true;
+                        status.goto = 'turningPoint';
                         saveState('full');
                         gotoNarrative(/*part3*/);
                     }
@@ -495,9 +570,9 @@ function checkGameState() {
                     if (ship.hits.length === ship.area()) acc[player.name]++
                 }), {[p1.player.name]:0,[p2.player.name]:0});
             if (Object.values(reduction).some(result=>result>2)) {
-                status.gameState.winner = status.gameState.turn;
-                status.gameState.turningPoint = true;
-                status.gameState.goto = 'victoryInSight';
+                status.winner = status.turn;
+                status.turningPoint = true;
+                status.goto = 'victoryInSight';
                 saveState('full');
                 gotoNarrative(/*turningPoint*/);
             }
@@ -508,9 +583,9 @@ function checkGameState() {
                     if (ship.hits.length === ship.area()) acc[player.name]++
                 }), {[p1.player.name]:0,[p2.player.name]:0});
             if (Object.values(reduction).some(result=>result>3)) {
-                status.gameState.winner = status.gameState.turn;
-                status.gameState.victoryInSight = true;
-                status.gameState.goto = 'winner';
+                status.winner = status.turn;
+                status.victoryInSight = true;
+                status.goto = 'winner';
                 saveState('full');
                 gotoNarrative(/*victoryInSight*/);
             }
@@ -521,9 +596,9 @@ function checkGameState() {
                     if (ship.hits.length === ship.area()) acc[player.name]++
                 }), {[p1.player.name]:0,[p2.player.name]:0});
             if (Object.values(reduction).some(result=>result===5)) {
-                status.gameState.winner = status.gameState.turn;
-                status.gameState.winGame = true;
-                status.gameState.goto = 'summary';
+                status.winner = status.turn;
+                status.winGame = true;
+                status.goto = 'summary';
                 saveState('full');
                 winGame();
                 gotoNarrative(/*Q's Riddle*/);
