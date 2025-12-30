@@ -20,18 +20,25 @@ class Signal {
 }
 
 // OBJ
-let status = {
+const status = {
     mode:null,
     gameKey:null,
-    shipsPlaced:false, firstBlood:false, firstSunkenShip:false, turningPoint:false, victoryInSight:false, winGame:false,
+    gameState: {
+        goto:'firstBlood',
+        shipsPlaced:false, 
+        firstBlood:false, 
+        firstSunkenShip:false, 
+        turningPoint:false, 
+        victoryInSight:false, 
+        winGame:false,
+        turnsTaken: {
+            player1: [0,0], /*[turns taken, turns taken since last hit]*/
+            player2: [0,0],
+        },
+    },
     winner:null,
-    goto:'firstBlood',
     activeBoard:null,
     turn:null,
-    turnsTaken: {
-        player1: [0,0], /*[turns taken, turns taken since last hit]*/
-        player2: [0,0],
-    },
 };
 
 // DOM
@@ -76,6 +83,24 @@ const modals = {
                 this.count++;
             }
         }
+    },
+    instance: {
+        target: document.getElementById('db-instance-modal'),
+        title: document.querySelector('#db-instance-modal .title'),
+        subhead: document.querySelector('#db-instance-modal .subhead'),
+        message: document.querySelector('#db-instance-modal .message'),
+        button: document.querySelector('#db-instance-modal button'),
+        action: null,
+        count:0,
+        listen() {this.button.addEventListener('click', this.action)},
+        show(config,options) {
+            this.options?.resetCount && (this.count = 0);
+            ['title', 'subhead', 'message', 'button']
+                .forEach(item=>config[item] && (this[item].innerHTML = config[item]))
+            this.action = config.action || this.target.close();
+            typeof this.action==='function' && this.button.addEventListener('click',this.action);
+            this.target.showModal();
+        },
     }
 
 }
@@ -159,7 +184,8 @@ async function autoLoadShips(player) {
             await new Promise((resolve,reject) => {
                 setTimeout(()=>player.board.setShipToPlace(allShips[keys[i]],resolve,reject), 50);
             });
-            allShips[keys[i]].classList.add('brkt-placed-ship');
+            console.log("ALLSHIPS", allShips[keys[i]]);
+            // allShips[keys[i]].classList.add('brkt-placed-ship');
             console.log("Ship's placement location", allShips[keys[i]]);
         }
     }
@@ -225,17 +251,16 @@ function setActiveBoard(player,activeBoardMode, otherBoardMode) {
 const weapons = {
     count:0,
     max:5,
-    evt:null,
-    shipName() {return this.evt.target.getAttribute('for')},
+    prev:[],
     weapon() {
         const playerWeapons =  status.turn.player.ships[this.shipName()].weapons;
         const weaponName = this.evt.target.title;
         return playerWeapons[weaponName];
     },
     async set(e) {
-        console.log("weapons.set("+e+")");
-        if (!e.target.classList.contains('weapon-symbol')) return;
-        // this.evt = e; 
+        console.log("weapons.set("+JSON.stringify(e.target,null,2)+")");
+        try {if (!e.target.classList.contains('weapon-symbol')) return;
+        } catch (err) {if (err.message.includes("Cannot read properties of undefined")) return}
 
         const shipName = e.target.getAttribute('for');
 
@@ -246,9 +271,12 @@ const weapons = {
         };
         
         if (weapon().remaining===0) return;
+        this.prev.push(e);
+        console.log("THIS IS PREV AT WRITE", this.prev);
 
         if (e.target.classList.contains('selected-weapon')) {
             e.target.classList.remove('selected-weapon');
+            status.activeBoard.placeItem.clear();
             return;
         } else {e.target.classList.add('selected-weapon')};
     
@@ -258,17 +286,20 @@ const weapons = {
             return player.board.cells[id];
         };
     
-        const handleColor = (weaponMaxed) => {
+        const handleColor = (option) => {
             console.log("handleColor()");
-            weaponMaxed && e.target.classList.add('maxed-weapon');
-            weapon().remaining===0
-                ? e.target.classList.replace('selected-weapon', 'depleated-weapon')
-                : e.target.classList.remove('selected-weapon');
+            switch (option) {
+                case 'maxed-weapon': e.target.classList.add('maxed-weapon'); break;
+                case 'removed': e.target.classList.add('selectedWeapon'); break;
+                default: weapon().remaining===0
+                    ? e.target.classList.replace('selected-weapon', 'depleated-weapon')
+                    : e.target.classList.remove('selected-weapon');
+            }
         };
     
-        const checkDone = (option, count, weapon) => {
+        const checkDone = (option, weapon) => {
             console.log("checkDone()");
-            console.log("weapon remaining: ", weapon.remaining);
+            const self = this;
             switch (option) {
                 case 'add': { this.count++; 
                     typeof weapon.remaining==='number' && (weapon.remaining--);
@@ -276,16 +307,21 @@ const weapons = {
                         Array.from(status.turn.targetingPanel.children).forEach(weapon => {
                             weapon.classList.remove('maxed-weapon')
                         })
-                    };
-                    console.log("Placed: ", this.count, "Allowed: ", weapon.max, "Remaining: ",weapon.remaining)
+                    } else {buttons.disable('fire')};
                 } break;
-                case 'remove': {this.count--; weapon.remaining++} break;
+                case 'remove': {this.count--; 
+                    weapon.remaining++; 
+                    console.log("THIS IS PREV AT READ", self.prev); 
+                    weapons.set(self.prev.pop())
+
+                } break;
             }
+            console.log("Placed: ", this.count, "Allowed: ", weapon.max, "Remaining: ",weapon.remaining)
         };
 
         new Signal(
-            (count,weapon)=>checkDone('add',count,weapon),
-            (count,weapon)=>checkDone('remove',count,weapon),
+            (weapon)=>checkDone('add',weapon),
+            (weapon,option)=>{checkDone('remove',weapon);handleColor(option)},
             status.activeBoard
         ).send();
         
@@ -296,16 +332,16 @@ const weapons = {
             status.activeBoard.placeItem.set(weapon(), onResolve, onReject, originCell());
         });
         console.log("Weapon Max Reached for turn.")
-    }
+    },
 }
 
 async function handleFire() {
     weapons.count = 0;
+    status.activeBoard.signal.clear();
     await new Promise((resolve) => {
-        mode('fire'); // Handle subspace
-        status.turn = p1 
-            ? p2.board.handeFire(p2.player.ships, resolve) 
-            : p1.board.handeFire(p1.player.ships, resolve);
+        status.turn===p1 
+            ? p2.board.handleFire(p2.player.ships, resolve) 
+            : p1.board.handleFire(p1.player.ships, resolve);
     })
 }
 
@@ -345,11 +381,9 @@ async function init() {
     for (let modal in modals) {modals[modal].listen()};
     buttons.switchUser.addEventListener('click', modals.switchUser.show.bind(modals.switchUser));
     buttons.toggleSubspace.addEventListener('click', ()=>{
-        status.turn === p1
-            ? p1.board.mode('toggle-subspace')
-            : p2.board.mode('toggle-subspace');
+        status.activeBoard.mode('toggle-subspace');
     });
-    buttons.fire.addEventListener('click', handleFire);
+    buttons.fire.addEventListener('click', ()=>mode('attack'));
 
     // INIT PLAYER SPECIFFIC ITEMS
     [p1,p2].forEach(player => {
@@ -421,20 +455,24 @@ function getState(option) {
             p2.config = JSON.parse(sessionStorage.getItem('player2'));
         } break;
         case 'profiles': {
-            const player1 = JSON.parse(sessionStorage.getItem('player1'))
-            const player2 = JSON.parse(sessionStorage.getItem('player2'))
+            const player1 = JSON.parse(sessionStorage.getItem('player1'));
+            const player2 = JSON.parse(sessionStorage.getItem('player2'));
+
             if (player1.location === 'local') {
                 p1.config = JSON.parse(localStorage.getItem(player1.user));
             } else {p1.config = JSON.parse(sessionStorage.getItem(player1.user))};
+
             if (player2.location === 'local') {
                 p2.config = JSON.parse(localStorage.getItem(player2.user));
             } else {p2.config = JSON.parse(sessionStorage.getItem(player2.user))};
-            status = JSON.parse(sessionStorage.getItem('gameState'));
+
+            const gameState = JSON.parse(sessionStorage.getItem('gameState'));
+            for (let key in gameState) {status[key] = gameState[key]}
         } break;
     }
 }
 
-function saveState(option) {
+function saveState(option,data) {
     const useErrorSafe = sessionStorage.getItem('useErrorSafe');
     headerEl.textContent = "Saving. . .";
     switch (option) {
@@ -452,7 +490,8 @@ function saveState(option) {
             sessionStorage.setItem( 'player2', JSON.stringify({user:p2.config.username, location:p2.config.storageEnabled ? 'local' : 'session'}) );
             delete p1.config;
             delete p2.config;
-        }
+        } break;
+        case 'gameMode': sessionStorage.set(data);
     }
 }
 
@@ -472,11 +511,13 @@ async function mode(option,player,data) {
                 ? gotoNarrative()
                 : mode('place-ships');
         } break;
+
         case 'place-ships': {
             getState('profiles');
             await init();
             placeShips();
         }; break;
+
         case 'ready': { player.status = 'ready';
             if (p1.status === 'ready' && p2.status === 'ready') {
                 saveState('full');
@@ -485,21 +526,40 @@ async function mode(option,player,data) {
                 : mode('place-ships');
             };
         } break;
+
         case 'begin-game': { headerEl.innerHTML = "loading. . .";
             getState('profiles');
             await init();
-            status.mode = 'play';
             [p1,p2].forEach(player=>player.status = 'play');
             mode('targeting',p1,p2);
         } break;
+
         case 'targeting': { headerEl.innerHTML = player.player.name+" Is Targeting"
             status.turn = player; console.log("turn", status.turn.player)
             setActiveBoard(data.player, 'targeting', 'static');
             player.targetingPanel.addEventListener('click', weapons.set.bind(weapons))
         } break;
-        case 'attack': { headerEl.innerHTML = player.player.name+" Is Attacking"
-            
+
+        case 'attack': { console.log("###STATUS DEBUGGING####",status)//headerEl.innerHTML = status.turn.player.name+" Is Attacking"
+            if (status.turn===p1) {p1.board.mode('subspace'); p2.board.mode('static');
+            } else {p2.board.mode('subspace'); p1.board.mode('static')};
+            // player.targetingPanel.removeEventListener('click', weapons.set.bind(weapons))
+            await new Promise((resolve) => {
+                modals.instance.show({
+                    title:"Attack Set", 
+                    message:`${status.turn.player.name}'s board is now in subspace mode.<br>When both players are ready to view the screen,<br>Press 'Attack'.`, 
+                    button:"Attack", 
+                    action:()=>{modals.instance.target.close();resolve()}
+                });
+            });
+            await handleFire();
+            // board does fire routine
+            // this.handlefire shows results & status message, then returns here
+            // Disable targeting panel
+            saveState('gameMode', 'switch-player');
+            checkGameState(); // On exit, set mode to status.goto
         } break;
+        case 'switch-player': {}
         case 'story': {} break;
         case 'pause': {} break;
         case 'summary': {} break;

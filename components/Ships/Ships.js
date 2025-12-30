@@ -77,6 +77,7 @@ export default class Ships {
         handleHit(targetCell, obj) { // obj = {originCell, type:'photonTorpedo'}
             targetCell['hit'] = obj;
             targetCell.target.classList.add('hit-cell');
+            return `Taregt hit! ${targetCell.target.id}`
         }
     }
 }

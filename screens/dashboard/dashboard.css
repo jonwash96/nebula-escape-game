@@ -32,7 +32,7 @@ main {
     #p1-board {grid-area:p1;}
     #p2-board {grid-area:p2;}
 
-    .rotate {scale: 90%;}
+    .rotate {scale: 93%;}
     #p1-board.rotate {transform:rotate(90deg) translateY(-20px);}
     #p2-board.rotate {transform:rotate(-90deg) translateY(-20px);}
 }

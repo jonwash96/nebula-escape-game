@@ -139,7 +139,10 @@ export default class Board {
         switch (option) {
             case 'place-ships': {
 				this.target.addEventListener('click', this.placeShip.bind(this));
+				Object.values(this.cells).forEach(cell => {
+					if (cell.committedCell) cell.target.classList.add('committedCell')});
 				this.brackets.classList.remove('hide');
+				this.target.classList.add('active-mode');
 			} break;
 			case 'targeting': {
 				this.activeCells = [];
@@ -148,23 +151,25 @@ export default class Board {
 				this.crosshairs.forEach(el=>el.classList.remove('hide'));
 				// this.brackets.classList.remove('hide');
 				this.target.addEventListener('click', this.placeShot.bind(this));
+				this.target.classList.add('active-mode');
 				this.mode('subspace');
 			} break;
 			case 'static': {
 				this.target.removeEventListener('click', this.placeShip.bind(this));
-				Object.values(this.cells).forEach(cell => {
-					if (cell.committedCell) cell.target.classList.add('committedCell')});
-				this.brackets.classList.add('hide');
-				this.disc.classList.add('hide');
-				this.crosshairs.forEach(el=>el.classList.add('hide'));
+				this.target.classList.add('static-mode');
+				// Object.values(this.cells).forEach(cell => {
+				// 	if (cell.committedCell) cell.target.classList.add('committedCell')});
+				this.targeting.classList.add('hide');
 			} break;
 			case 'subspace': { 
 				Object.values(this.cells).forEach(cell => {
 				if (cell.committedCell) cell.target.classList.remove('committedCell') })
+					this.target.classList.add('subspace-mode');
 			} break;
 			case 'toggle-subspace': { 
 				Object.values(this.cells).forEach(cell => {
 				if (cell.committedCell) cell.target.classList.toggle('committedCell') })
+				this.target.classList.toggle('subspace-mode');
 			} break;
 			default: {return this.status.mode}
         }
@@ -324,8 +329,7 @@ export default class Board {
 		reject:null,
 		data:null,
 		count:0,
-		self:this,
-		next(max,data){this.count===max && this.done(data)},
+		next(max,data){this.item.remaining===max && this.done(data)},
 		done(data){this.resolve(data); this.clear()},
 		abort(data){this.reject(data); this.clear()},
 		clear() {['item','resolve','reject','data'].forEach(i=>this[i] = null); this.count=0},
@@ -338,37 +342,42 @@ export default class Board {
 
 	placeShot(e) {
 		if (!e.target.classList.contains('cell')) return;
-		if (this.placeItem.item.remaining === this.placeItem.item.max)
+		if (this.placeItem.item && this.placeItem.item.remaining === this.placeItem.item.max)
 				return this.placeItem.abort(this.placeItem.count);
 
 		if (this.placeItem.item && !e.target.classList.contains('targetedCell')) {
 			this.placeItem.count++;
-			this.signal.resolve(this.placeItem.count, this.placeItem.item);
+			this.signal.resolve(this.placeItem.item);
 			e.target.classList.add('targetedCell');
-			e.target.setAttribute('weapon', this.placeItem.item);
-			e.target.setAttribute('originCell', this.placeItem.data);
+			e.target['weapon'] = this.placeItem.item;
+			e.target['originCell'] = this.placeItem.data;
 			this.activeCells.push(this.cells[e.target.id]);
 			console.log("Shot Placed on ", e.target.id);
-		} else {
-			const weapon = e.target.getAttribute('weapon');
+			return this.placeItem.next(this.placeItem.item.max, 'maxed-weapon');
+		} else if (e.target.classList.contains('targetedCell')) {
+			const weapon = e.target.weapon;
 			this.placeItem.count--;
-			this.signal.reject(this.placeItem.count, weapon);
+			this.signal.reject(weapon, 'removed');
 			e.target.classList.remove('targetedCell');
-			e.target.removeAttribute('weapon');
-			e.target.removeAttribute('originCell');
-			this.activeCells.splice(indexOf(e.target.id), 1);
+			delete e.target.weapon;
+			delete e.target. originCell;
+			this.activeCells.splice(this.activeCells.indexOf(e.target.id), 1);
 			console.log("Shot Removed from ", e.target.id);
+			this.doCleanCellResidue();
 		}
-		return this.placeItem.next(this.placeItem.item.max, true);
 	}
 
 	async handleFire(ships, resolve) {
-		const delay = () => new Promise((geaux)=>setTimeout(()=>geaux(),600));
-		for (let cell of activeCells) {
-			const weapon = cell.getAttribute('weapon');
-			const originCell = cell.getAttribute('originCell');
+		const delay = () => new Promise((geaux)=>setTimeout(()=>geaux(),1000));
+		for (let cell of this.activeCells) {
+			cell['weapon'] = cell.target.weapon;
+			cell['originCell'] = cell.target.originCell
+			const weapon = cell.weapon;
+			const originCell = cell.originCell;
 			const originBoardNum = this.boardNumber===1 ? 2 : 1; 
-			weapon.fire(originBoardNum, originCell, cell, ships);
+			console.log("Board calls FIRE; Weapon:", weapon)
+			console.log("Board calls FIRE; .fire", weapon.fire)
+			console.log(weapon.fire(originBoardNum, originCell, cell, ships));
 			await delay();
 		};
 		resolve();
