@@ -1,5 +1,3 @@
-import { config } from "../../game/config.js";
-
 const parse = (strNum) => Object({ x: Number(strNum.slice(0,2)), y: Number(strNum.slice(-2)) });
 
 const cellDistance = (originCell, cell) => Math.hypot(parse(cell).x - parse(originCell).x, parse(cell).y - parse(originCell).y)
@@ -16,59 +14,75 @@ function remap(value, inMin, inMax, outMin, outMax) {
 }
 
 // POINT INTERSECTS RAY (CHATGPT)
-function rayIntersectsCell(origin, dir, cellMin, cellMax) {
-  const t1 = (cellMin.x - origin.x) / dir.x;
-  const t2 = (cellMax.x - origin.x) / dir.x;
-  const t3 = (cellMin.y - origin.y) / dir.y;
-  const t4 = (cellMax.y - origin.y) / dir.y;
+function rayIntersectsCellB(origin, dir, cellMin, cellMax) {
+if (origin.col===cellMin.col) return true;
 
-  const tmin = Math.max(
-    Math.min(t1, t2),
-    Math.min(t3, t4)
-  );
+  const invDx = dir.row !== 0 ? 1 / dir.row : Infinity;
+  const invDy = dir.col !== 0 ? 1 / dir.col : Infinity;
 
-  const tmax = Math.min(
-    Math.max(t1, t2),
-    Math.max(t3, t4)
-  );
+  let tmin = (cellMin.row - origin.row) * invDx;
+  let tmax = (cellMax.row - origin.row) * invDx;
 
-  // No intersection or behind ray
-  if (tmax < 0 || tmin > tmax) return false;
+  if (tmin > tmax) [tmin, tmax] = [tmax, tmin];
 
-  return true;
+  let tymin = (cellMin.col - origin.col) * invDy;
+  let tymax = (cellMax.col - origin.col) * invDy;
+
+  if (tymin > tymax) [tymin, tymax] = [tymax, tymin];
+
+  if (tmin > tymax || tymin > tmax) return false;
+
+  const tHit = Math.max(tmin, tymin);
+
+  return tHit >= 0;
 }
 
-// Handmade Parser for AI built function
-function rayIntersect(originBoardNum, origin, target, testPoint) {
-  const parse = (strNum) => Object({ x: Number(strNum.slice(0,2)), y: Number(strNum.slice(-2)) });
+// HANDMADE PARSER FOR AI BUILT RAY-INTERSECT FUNCTION
+function rayIntersect(targetBoardNum, origin, target, testPoint) {
+  const parse = (strNum) => Object({ 
+    row: Number(strNum.slice(0,2)), 
+    col: Number(strNum.slice(-2)) });
 
-  const p1ToGlobal = (obj) => Object({ x:obj.x, y: - obj.y });
-  const p2ToGlobal = (obj) => Object({ x:obj.x, y: config.boardSize - obj.y + 1 });
+  const p1ToGlobal = (obj) => Object({ row:26-obj.row, col:obj.col });
+  const p2ToGlobal = (obj) => Object({ row:26+obj.row, col:26-obj.col });
 
-  const len = (obj) => Math.hypot(obj.x, obj.y);
-  const norm = (obj) => Object({ x:obj.x / len(obj.x), y:obj.y / len(obj.y) });
+  // console.log("LOCAL: ", parse(origin), parse(target))
+  // console.log("GLOBAL", p1ToGlobal(parse(origin)), p2ToGlobal(parse(target)))
+
+  const len = (obj) => Math.hypot(obj.row, obj.col);
+  const norm = (obj) => Object({ row:obj.row / len(obj), col:obj.col / len(obj) });
 
   const rayDir = () => {
-    return originBoardNum===1 && norm( Object({ 
-      x:p1ToGlobal(parse(target)).x - p1ToGlobal(parse(origin)).x, 
-      y:p1ToGlobal(parse(target)).y - p1ToGlobal(parse(origin)).y }) ) ||
-    originBoardNum===2 && norm( Object({ 
-      x:p2ToGlobal(parse(target)).x - p2ToGlobal(parse(origin)).x, 
-      y:p2ToGlobal(parse(target)).y - p2ToGlobal(parse(origin)).y }) )
+    return targetBoardNum===1 && norm( Object({ 
+      row:(p2ToGlobal(parse(target)).row - p1ToGlobal(parse(origin)).row), 
+      col:(p2ToGlobal(parse(target)).col - p1ToGlobal(parse(origin)).col) }) ) ||
+    targetBoardNum===2 && norm( Object({ 
+      row:-(p2ToGlobal(parse(target)).row - (p1ToGlobal(parse(origin)).row)), 
+      col:-((p2ToGlobal(parse(target)).col) - (p1ToGlobal(parse(origin)).col)) }) )
   }
 
   const cellMin = () => {
-    return originBoardNum===1 && Object({ x:p1ToGlobal(parse(testPoint)).x, y:p1ToGlobal(parse(testPoint)).y }) ||
-           originBoardNum===2 && Object({ x:p2ToGlobal(parse(testPoint)).x, y:p2ToGlobal(parse(testPoint)).y })
+    return targetBoardNum===1 && Object({ 
+      row:p2ToGlobal(parse(testPoint)).row, 
+      col:p2ToGlobal(parse(testPoint)).col }) ||
+    targetBoardNum===2 && Object({ 
+      row:p2ToGlobal(parse(testPoint)).row, 
+      col:p2ToGlobal(parse(testPoint)).col })
   }
 
   const cellMax = () => {
-    return originBoardNum===1 && Object({ x:p1ToGlobal(parse(testPoint)).x + 1, y:p1ToGlobal(parse(testPoint)).y + 1 }) ||
-           originBoardNum===2 && Object({ x:p2ToGlobal(parse(testPoint)).x + 1, y:p2ToGlobal(parse(testPoint)).y + 1 })
+    return targetBoardNum===1 && Object({ 
+      row:p2ToGlobal(parse(testPoint)).row + 1, 
+      col:p2ToGlobal(parse(testPoint)).col + 1 }) ||
+    targetBoardNum===2 && Object({ 
+      row:p2ToGlobal(parse(testPoint)).row + 1, 
+      col:p2ToGlobal(parse(testPoint)).col + 1 })
   }
 
-  return originBoardNum===1 && rayIntersectsCell( p1ToGlobal(parse(origin)), rayDir(), cellMin(), cellMax() ) || 
-         originBoardNum===2 && rayIntersectsCell( p2ToGlobal(parse(origin)), rayDir(), cellMin(), cellMax() )
+  return targetBoardNum===1 
+    && rayIntersectsCellB( p1ToGlobal(parse(origin)), rayDir(), cellMin(), cellMax() ) || 
+    targetBoardNum===2 
+      && rayIntersectsCellB( p2ToGlobal(parse(origin)), rayDir(), cellMin(), cellMax() )
 }
 
 export { parallax, remap, rayIntersect, cellDistance, parse };

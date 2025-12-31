@@ -27,7 +27,7 @@
     /* aspect-ratio: 1/1; */
     height: 100%; 
     grid-area: m-board;
-    /* border: 4px solid var(--cyan); */
+    border: 4px solid var(--cyan);
     border-radius: 6px;
     display:flex;
     flex-direction:column;
@@ -37,7 +37,10 @@
 }
 
 .Board.active-mode .Board-grid-container {border: 4px solid var(--dgold);}
-.Board.static-mode .Board-grid-container {border: 4px solid var(--cyan);}
+.Board.subspace-mode {
+    & .board-row {background-color:#0125;transition:background-color 400ms;}
+    & .cell {border: 1px solid #0025;transition:border 400ms;}
+}
 
 
 .board-row {
@@ -59,7 +62,7 @@
         /* aspect-ratio: 1/1; */
         text-align: center;
         vertical-align: middle;
-        color:transparent;
+        /* color:transparent; */
     }
     line-height: 0;
 
@@ -72,15 +75,33 @@
 .hoverCell {background-color: var(--cyan);}
 .hoverCell:hover {background-color: var(--lcyan) !important;}
 .activeCell {background-color: var(--blue);}
-.committedCell {background-color: var(--blue);}
+.committedCell {background-color: var(--blue);transition:background-color 400ms;}
 .committedCell:hover {background-color: var(--lcyan) !important;}
 .impededCell {background-color: var(--red);}
 .forbiddenCell {background-color: var(--red);} 
 .targetedCell {
-    border: 1px solid var(--red);
-    background-color: var(--red);
-    &:hover {background-color:var(--lred) !important;}
+    border: 1px solid var(--lred);
+    background-color: var(--lred);
+    transition:background-color 200ms;
+    &:hover {background-color:#b00 !important;}
 }
+
+.hitCell {background-color: #0fc;transition:background-color 800ms;}
+.missCell {background-color: #fffb;transition:background-color 800ms;}
+.hitCell::before, .missCell::before {
+    font-size:7pt;
+    font-weight:600; 
+    color:black; 
+    top:50%; 
+    height:1em; 
+    aspect-ratio:1/1; 
+    position:relative; 
+    z-index:2; 
+}
+.hitCell.photonTorpedo::before {content:"PT";}
+.missCell.photonTorpedo::before {content:"PT";}
+.hitCell.phaseCannon::before {content:"PC";}
+.missCell.phaseCannon::before {content:"PC";}
 
 .Board header, .Board footer {
     font-size: 0.5em;
@@ -104,6 +125,7 @@
     display: flex;
     flex-direction: column;
     justify-content: space-around;
+    padding: 1em 0;
     position: relative;
     height: 100%;
     width: var(--label-extents);

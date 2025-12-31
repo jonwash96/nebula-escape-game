@@ -1,8 +1,9 @@
 import Player from "../../game/Player.js";
 import BOT from "../../../engine/BOT.js";
 import { nav } from "../../nav_dev.js";nav();
+import { rayIntersect,cellDistance,parse } from "../../engine/utils/math.js";
 
-// MINI-MODS
+// BUS
 class Signal {
     constructor(resolver,rejector,destination) {
         this.resolver = resolver;
@@ -19,8 +20,9 @@ class Signal {
     }
 }
 
+
 // OBJ
-const status = {
+const state = {
     mode:null,
     gameKey:null,
     gameState: {
@@ -40,6 +42,7 @@ const status = {
     activeBoard:null,
     turn:null,
 };
+
 
 // DOM
 const headerEl = document.getElementById('game-status-header');
@@ -61,8 +64,8 @@ const modals = {
         show() {
             this.count = 0;
             this.target.showModal();
-            this.target.children[1].textContent = status.turn?.player?.name;
-            if (status.turn?.player?.password) {
+            this.target.children[1].textContent = state.turn?.player?.name;
+            if (state.turn?.player?.password) {
                 this.target.children[2].textContent = this.passwordUserMessage;
                 this.target.children[3].style.display = 'block';
             } else {
@@ -71,8 +74,8 @@ const modals = {
             }
         },
         action(e) {
-            if (status.turn?.player?.password) {
-                if (this.target.children[3].value === status?.turn?.player?.password) {
+            if (state.turn?.player?.password) {
+                if (this.target.children[3].value === state?.turn?.player?.password) {
                     this.target.close();
                 } else {
                     this.target.children[2].style.color = "#f66";
@@ -138,7 +141,24 @@ const buttons = {
     pause: document.getElementById('btn-pause'),
     orient: document.getElementById('btn-orient'),
     switchUser: document.getElementById('btn-switch-user'),
-    toggleSubspace: document.getElementById('toggle-subspace'),
+    toggleSubspace: {
+        target: document.getElementById('toggle-subspace'),
+        text(msg) { msg 
+            ? this.target.innerHTML = msg 
+            : this.target.textContent = "Toggle Subspace";
+        },
+        action: (e)=>{buttons.toggleSubspace.default()},
+        default() {state.turn.board.mode('toggle-subspace')}
+    },
+    devToggleOppSubspace: {
+        target: document.getElementById('dev_toggle-opp-subspace'),
+        text(msg) { msg 
+            ? this.target.innerHTML = msg 
+            : this.target.textContent = "devToggleOppSubspace";
+        },
+        action: (e)=>{buttons.devToggleOppSubspace.default()},
+        default() {state.activeBoard.mode('toggle-subspace')}
+    },
     turnTimer: {
         target: document.getElementById('turn-timer'),
         start() {
@@ -151,42 +171,92 @@ const buttons = {
     disable(button){this[button].classList.replace('active', 'disabled')},
 }
 
+
 // FUNC
 let autoLoadShipsCurry = () => {};
 let readyPlayerX = () => {};
 
+function gotoNarrative() {
+    window.location = "http://127.0.0.1:5500/screens/narrative/narrative.html"
+}
+
+function setActiveBoard(player, activeBoardMode, option1, otherBoardMode, option2) {
+    console.log("setActiveBoard("+player.player.name+" ("+player.player.playerNum+"))") //!
+    const [px,py,offset] = player.player.playerNum===1 ? [p1,p2,'left'] : [p2,p1,'right'];
+
+    state.activeBoard = px.board;
+    px.board.mode(activeBoardMode, option1);
+    px.board.target.classList.add('active-mode');
+    px.board.setBracketOffset(offset);
+    
+    py.board.target.classList.remove('active-mode');
+    py.board.mode(otherBoardMode, option2);
+}
+
+async function placeShips() {
+    for (let player of [p1,p2]) {
+        const usr = player.player.name!=='BOT';
+        setActiveBoard(player, 'place-ships', null, 'static', 'subspace');
+        headerEl.innerHTML = `<strong>${player.player.name}</strong> Placing Ships`;
+        
+        state.turn = player;
+        player.status = 'place-ships';
+        if (usr) {
+            Array.from(player.shipsPanelShips.children)
+                .forEach(ship => {
+                    ship.classList.add('clickable');
+                    ship.addEventListener('click', placeShipsClick)
+                });
+            player.shipsPanelBtn.classList.add('blue');
+            player.shipsPanelBtn.textContent = "Auto";
+            player.shipsPanelBtn.classList.remove('hide');
+            player.shipsPanelBtn.classList.add('clickable');
+        };
+
+        await new Promise(resolve => {
+            readyPlayerX = () => {
+                usr && player.shipsPanelBtn.classList.toggle('hide'); 
+                resolve(mode('ready',player))
+            };
+            autoLoadShipsCurry = (e) => autoLoadShips(player,e);
+            usr && player.shipsPanelBtn.addEventListener('click', autoLoadShipsCurry);
+            try{!usr && player.player.mode('place-ships',{readyPlayerX, player})}
+            catch{null};
+        });
+    }
+}
+
 async function placeShipsClick(e) {
-    const which = e.target.getAttribute('owner').match('p1') ? p1 : p2;
-    if (e.target.classList.contains('ship')) {
-        const ship = which.player.ships[e.target.id];
-        if (!ship.location) {
-            await new Promise((resolve) => {
-                which.board.setShipToPlace(ship,resolve);
-            });
-            e.target.classList.add('brkt-placed-ship');
-            console.log("Ship's placement location:", which.board.cells[ship.location[0]].target.classList[0])
-        }
-        if (Object.values(which.player.ships).every(ship=>ship.location)) {
-            which.shipsPanelBtn.classlist.replace('blue', 'red');
-            which.shipsPanelBtn.textContent = "Done";
-            which.shipsPanelBtn.removeEventListener('click', autoLoadShipsCurry);
-            which.shipsPanelBtn.addEventListener('click', readyPlayerX);
-        }
+    if (!e.target.classList.contains('ship')) return;
+
+    const ship = state.turn.ships[e.target.id];
+    if (!ship.location) {
+        await new Promise((resolve) => {
+            state.activeBoard.placeItem.set(ship,resolve);
+        });
+        e.target.classList.add('placed-ship');
+        console.log("Ship's placement location:", state.activeBoard.cells[ship.location[0]].target.classList[0]) //!
+    }
+    if (Object.values(state.turn.player.ships).every(ship=>ship.location)) {
+        state.turn.shipsPanelBtn.classlist.replace('blue', 'red');
+        state.turn.shipsPanelBtn.textContent = "Done";
+        state.turn.shipsPanelBtn.removeEventListener('click', autoLoadShipsCurry);
+        state.turn.shipsPanelBtn.addEventListener('click', readyPlayerX);
     }
 }
 
 async function autoLoadShips(player) {
-    const keys = Object.keys(player.player.ships);
-    const allShips = player.player.ships;
+    const keys = Object.keys(player.ships);
+    const allShips = player.ships;
     for (let i = 0; i < keys.length; i++) {
-        console.log("ITERATOR", i, "allShips", allShips.length)
+        console.log("ITERATOR", i, "allShips", allShips.length);//!
+        const ship = allShips[keys[i]];
         if (!allShips[keys[i]].location) {
             await new Promise((resolve,reject) => {
-                setTimeout(()=>player.board.setShipToPlace(allShips[keys[i]],resolve,reject), 50);
+                setTimeout(()=>player.board.placeItem.set(ship,resolve,reject),50);
             });
-            console.log("ALLSHIPS", allShips[keys[i]]);
-            // allShips[keys[i]].classList.add('brkt-placed-ship');
-            console.log("Ship's placement location", allShips[keys[i]]);
+            player.shipsPanel.querySelector(`#${ship.name}`).classList.add('placed-ship');
+            console.log("Ship's placement location", ship); //!
         }
     }
     if (player.name !== "BOT") {
@@ -198,62 +268,12 @@ async function autoLoadShips(player) {
     console.log("All Ships Placed. Awaiting opponent place ships.");
 }
 
-async function placeShips() {
-    for (let player of [p1,p2]) {
-        let usr = true;
-        setActiveBoard(player, 'place-ships', 'static');
-        if (player.player.name==='BOT') {usr = false};
-        headerEl.textContent = `${player.player.name} Place Ships`;
-        usr && Array.from(player.shipsPanelShips.children)
-            .forEach(ship=>{
-                ship.classList.add('clickable');
-                ship.addEventListener('click', placeShipsClick)
-            });
-        await new Promise(resolve => {
-            player.board.mode('place-ships');
-            usr && player.targetingEnabled && enableTargeting();
-            player.status = 'place-ships';
-            usr && player.shipsPanelBtn.classList.add('blue');
-            usr && (player.shipsPanelBtn.textContent = "Auto");
-            usr && player.shipsPanelBtn.classList.remove('hide');
-            usr && player.shipsPanelBtn.classList.add('clickable');
-            readyPlayerX = () => {usr && player.shipsPanelBtn.classList.toggle('hide'); 
-                resolve(mode('ready',player))};
-            usr && (autoLoadShipsCurry = (e) => autoLoadShips(player,e));
-            usr && player.shipsPanelBtn.addEventListener('click', autoLoadShipsCurry);
-            if (!usr) {player.player.mode('place-ships',{readyPlayerX, player})};
-        });
-    }
-}
-
-function gotoNarrative() {
-    window.location = "http://127.0.0.1:5500/screens/narrative/narrative.html"
-}
-
-function setActiveBoard(player,activeBoardMode, otherBoardMode) {
-    console.log("setActiveBoard("+player.name+")")
-    player.board.root.classList.add('active-board');
-    activeBoardMode && player.board.mode(activeBoardMode)
-
-    if (player.board.boardNumber === 1) {
-        p2.board.root.classList.remove('active-board');
-        otherBoardMode && p2.board.mode(otherBoardMode);
-        p1.board.setBracketOffset('left');
-        status.activeBoard = p1.board;
-    } else {
-        p1.board.root.classList.remove('active-board');
-        otherBoardMode && p1.board.mode(otherBoardMode);
-        p2.board.setBracketOffset('right');
-        status.activeBoard = p2.board;
-    }
-}
-
 const weapons = {
     count:0,
     max:5,
     prev:[],
     weapon() {
-        const playerWeapons =  status.turn.player.ships[this.shipName()].weapons;
+        const playerWeapons =  state.turn.player.ships[this.shipName()].weapons;
         const weaponName = this.evt.target.title;
         return playerWeapons[weaponName];
     },
@@ -265,7 +285,7 @@ const weapons = {
         const shipName = e.target.getAttribute('for');
 
         const weapon = () => {
-            const playerWeapons =  status.turn.player.ships[shipName].weapons;
+            const playerWeapons =  state.turn.player.ships[shipName].weapons;
             const weaponName = e.target.title;
             return playerWeapons[weaponName];
         };
@@ -276,12 +296,13 @@ const weapons = {
 
         if (e.target.classList.contains('selected-weapon')) {
             e.target.classList.remove('selected-weapon');
-            status.activeBoard.placeItem.clear();
+            state.activeBoard.placeItem.clear();
             return;
         } else {e.target.classList.add('selected-weapon')};
     
         const originCell = () => {
-            const player = status.turn.player; 
+            const player = state.turn.player; 
+            console.log(player.ships)
             const id = player.ships[shipName].location[0];
             return player.board.cells[id];
         };
@@ -301,35 +322,32 @@ const weapons = {
             console.log("checkDone()");
             const self = this;
             switch (option) {
-                case 'add': { this.count++; 
-                    typeof weapon.remaining==='number' && (weapon.remaining--);
-                    if (this.count===this.max) { buttons.enable('fire'); handleColor();
-                        Array.from(status.turn.targetingPanel.children).forEach(weapon => {
-                            weapon.classList.remove('maxed-weapon')
-                        })
-                    } else {buttons.disable('fire')};
+                case 'add': {this.count++; typeof weapon.remaining==='number' && weapon.remaining--;
                 } break;
-                case 'remove': {this.count--; 
-                    weapon.remaining++; 
+                case 'remove': { this.count--; weapon.remaining++; weapons.set(self.prev.pop())
                     console.log("THIS IS PREV AT READ", self.prev); 
-                    weapons.set(self.prev.pop())
-
                 } break;
             }
+
+            if (this.count===this.max) { buttons.enable('fire'); handleColor();
+                Array.from(state.turn.targetingPanel.children).forEach(weapon => {
+                    weapon.classList.remove('maxed-weapon')
+                })
+            } else {buttons.disable('fire')};
             console.log("Placed: ", this.count, "Allowed: ", weapon.max, "Remaining: ",weapon.remaining)
         };
 
         new Signal(
             (weapon)=>checkDone('add',weapon),
             (weapon,option)=>{checkDone('remove',weapon);handleColor(option)},
-            status.activeBoard
+            state.activeBoard
         ).send();
         
         await new Promise((resolve,reject) => {
-            console.log("Promise Snet:",weapon(),originCell())
+            console.log("Weapon Sent:",weapon(),originCell())
             const onResolve = () => { handleColor(true); resolve() };
             const onReject = () => { handleColor(); reject() };
-            status.activeBoard.placeItem.set(weapon(), onResolve, onReject, originCell());
+            state.activeBoard.placeItem.set(weapon(), onResolve, onReject, originCell());
         });
         console.log("Weapon Max Reached for turn.")
     },
@@ -337,9 +355,9 @@ const weapons = {
 
 async function handleFire() {
     weapons.count = 0;
-    status.activeBoard.signal.clear();
+    state.activeBoard.signal.clear();
     await new Promise((resolve) => {
-        status.turn===p1 
+        state.turn===p1 
             ? p2.board.handleFire(p2.player.ships, resolve) 
             : p1.board.handleFire(p1.player.ships, resolve);
     })
@@ -348,30 +366,31 @@ async function handleFire() {
 
 // INIT
 async function init() {
+    const start = Date.now();
     let bot = false;
     // CREATE CLASSES
     if (p1.config.name === "BOT") {
         bot = true;
         p1.player = new BOT(p1.config, p1.boardEl,{follow:false,enableTargeting:false});
         p1.board = p1.player.board;
-        await p1.board.render();
+        p1.ships = p1.player.ships;
     } else {
         p1.player = new Player(p1.config, p1.boardEl, loadTargetingSystem, {follow:false,enableTargeting:true});
         p1.board = p1.player.board;
-        await p1.board.render();
+        p1.ships = p1.player.ships;
     }
     if (p2.config.name === "BOT") {
         bot = true;
         p2.player = new BOT(p2.config, p2.boardEl,{follow:false,enableTargeting:false});
         p2.board = p2.player.board;
-        await p2.board.render();
+        p2.ships = p2.player.ships;
     } else {
         p2.player = new Player(p2.config, p2.boardEl, loadTargetingSystem, {follow:false,enableTargeting:true});
         p2.board = p2.player.board;
-        await p2.board.render();
+        p2.ships = p2.player.ships;
     }
 
-    // REFF DOM
+    // SETUP DOM
     console.log("Setup DOM");
     !bot && (buttons.switchUser.textContent = 'Switch User');
     buttons.orient.classList.add('clickable');
@@ -380,17 +399,17 @@ async function init() {
     // EVENT LISTENERS
     for (let modal in modals) {modals[modal].listen()};
     buttons.switchUser.addEventListener('click', modals.switchUser.show.bind(modals.switchUser));
-    buttons.toggleSubspace.addEventListener('click', ()=>{
-        status.activeBoard.mode('toggle-subspace');
-    });
-    buttons.fire.addEventListener('click', ()=>mode('attack'));
+    buttons.toggleSubspace.target.addEventListener('click', buttons.toggleSubspace.action);
+    buttons.fire.addEventListener('click',()=>mode('attack'));
+
+    buttons.devToggleOppSubspace.target.addEventListener('click', buttons.devToggleOppSubspace.action);
 
     // INIT PLAYER SPECIFFIC ITEMS
     [p1,p2].forEach(player => {
         player.gameSummaryPanel.innerHTML = player.player.name;
         // BUILD SHIPS ON Dashboard
         player.shipsPanelShips.classList.add(player.player.side)
-        Object.values(player.player.ships).forEach(ship => {
+        Object.values(player.ships).forEach(ship => {
             const wrapper = document.createElement('div');
                 wrapper.innerHTML = ship.projection;
                 wrapper.id = ship.name;
@@ -426,6 +445,8 @@ async function init() {
                 row.appendChild(weapons);
                 player.targetingPanel.appendChild(row);
         });
+
+        player.boardEl.classList.toggle('rotate')
     
         // HANDLE EVENTS
         buttons.orient.addEventListener('click', (e)=>player.boardEl.classList.toggle('rotate'));
@@ -442,10 +463,12 @@ async function init() {
             } else {document.querySelector('main').style.pointerEvents = 'all';}
         });
     });
-    console.log("Init Done");
-    return;
+    const end = Date.now()
+    return console.log("INITIALIZATION SEQUENCE COMPLETE\n Time Taken: ", (end - start), "ms");
 };
 
+
+// DATA
 function getState(option) {
     switch (option) {
         case 'gameMode': {return sessionStorage.getItem('gameMode')}; break;
@@ -467,7 +490,7 @@ function getState(option) {
             } else {p2.config = JSON.parse(sessionStorage.getItem(player2.user))};
 
             const gameState = JSON.parse(sessionStorage.getItem('gameState'));
-            for (let key in gameState) {status[key] = gameState[key]}
+            for (let key in gameState) {state[key] = gameState[key]}
         } break;
     }
 }
@@ -483,7 +506,8 @@ function saveState(option,data) {
             if (p2.player.storageEnabled) {
                 localStorage.setItem(p2.player.username, JSON.stringify(p2.player))
             } else {sessionStorage.setItem(p2.player.username, JSON.stringify(p2.player))}
-            sessionStorage.setItem('gameState', JSON.stringify(status))
+            sessionStorage.setItem('gameState', JSON.stringify(state));
+            data && saveState('gameState', state.mode);
         } break;
         case 'player-lookup': {
             sessionStorage.setItem( 'player1', JSON.stringify({user:p1.config.username, location:p1.config.storageEnabled ? 'local' : 'session'}) );
@@ -491,15 +515,15 @@ function saveState(option,data) {
             delete p1.config;
             delete p2.config;
         } break;
-        case 'gameMode': sessionStorage.set(data);
+        case 'gameMode': sessionStorage.setItem('gameMode', data);
     }
 }
 
-// MODE
+// MANAGEMENT
 async function mode(option,player,data) {
     console.log("Dashboard Mode Set:", option, player?.username, data);
     // let usr = !player?.player.name === 'BOT'
-    status.mode = option;
+    state.mode = option;
 
     switch (option) {
         case 'init': {
@@ -515,39 +539,44 @@ async function mode(option,player,data) {
         case 'place-ships': {
             getState('profiles');
             await init();
-            placeShips();
+            await placeShips();
         }; break;
 
         case 'ready': { player.status = 'ready';
+            // GFS.diff.save('place-ships',player.player.playerNum,'place-ships,[player.board,player.ships]);
             if (p1.status === 'ready' && p2.status === 'ready') {
+                [p1.board,p2.board].forEach(b=>{b.activeCells=[];b.mode('subspace')});
                 saveState('full');
                 getState('storyModePlayer')
-                ? gotoNarrative()
-                : mode('place-ships');
+                    ? gotoNarrative()
+                    : mode('begin-game');
             };
         } break;
 
         case 'begin-game': { headerEl.innerHTML = "loading. . .";
             getState('profiles');
             await init();
-            [p1,p2].forEach(player=>player.status = 'play');
+            [p1.board,p2.board].forEach(b=>{b.activeCells=[];b.mode('subspace')});
             mode('targeting',p1,p2);
         } break;
 
-        case 'targeting': { headerEl.innerHTML = player.player.name+" Is Targeting"
-            status.turn = player; console.log("turn", status.turn.player)
-            setActiveBoard(data.player, 'targeting', 'static');
-            player.targetingPanel.addEventListener('click', weapons.set.bind(weapons))
+        case 'targeting': { headerEl.innerHTML = `<strong>${player.player.name}</strong> Is Targeting`;
+            state.turn = player; console.log("turn", state.turn.player)
+            setActiveBoard(data, 'targeting', 'dissable-subspace', 'static', 'subspace');
+            player.targetingPanel.addEventListener('click', weapons.set.bind(weapons));
+
+            // await testPhaser();
         } break;
 
-        case 'attack': { console.log("###STATUS DEBUGGING####",status)//headerEl.innerHTML = status.turn.player.name+" Is Attacking"
-            if (status.turn===p1) {p1.board.mode('subspace'); p2.board.mode('static');
+        case 'attack': { headerEl.innerHTML = `<strong>${state.turn.player.name}</strong> Is Attacking`;
+            saveState('full');
+            if (state.turn===p1) {p1.board.mode('subspace'); p2.board.mode('static');
             } else {p2.board.mode('subspace'); p1.board.mode('static')};
             // player.targetingPanel.removeEventListener('click', weapons.set.bind(weapons))
             await new Promise((resolve) => {
                 modals.instance.show({
                     title:"Attack Set", 
-                    message:`${status.turn.player.name}'s board is now in subspace mode.<br>When both players are ready to view the screen,<br>Press 'Attack'.`, 
+                    message:`${state.turn.player.name}'s board is now in subspace mode.<br>When both players are ready to view the screen,<br>Press 'Attack'.`, 
                     button:"Attack", 
                     action:()=>{modals.instance.target.close();resolve()}
                 });
@@ -556,24 +585,32 @@ async function mode(option,player,data) {
             // board does fire routine
             // this.handlefire shows results & status message, then returns here
             // Disable targeting panel
-            saveState('gameMode', 'switch-player');
-            checkGameState(); // On exit, set mode to status.goto
+            // saveState('gameMode', 'switch-player');
+            
+            // checkGameState(); // On exit, set mode to status.goto
         } break;
         case 'switch-player': {}
         case 'story': {} break;
         case 'pause': {} break;
         case 'summary': {} break;
 
-        default: return status.mode;
+        default: return state.mode;
     }
 }
 
+//TODO: TEST & MV->FUNC
 function checkGameState() {
-    console.log("################ GAMESTATE ##################")
+    console.log("################ GAMESTATE ##################");
+    [p1,p2].forEach(px=>{
+        console.log(`${px.player.name}: hits`, px.player.hits)
+        console.log(`${px.player.name}: misses`, px.player.misses)
+        console.log(`${px.player.name}: health`, px.player.damage.health)
+    })
+
     console.log("First Blood condition Result",
         "Reducer: ", [p1.player.hits,p2.player.hits].reduce((acc,current) => {
                     acc += Object.values(current).length },0),
-        "Logic: ",  !status.firstBlood
+        "Logic: ",  !state.firstBlood
     )
     console.log("firstSunkenShip condition Result",
         "Hits length Matches area?: ", [Object.values(p1.player.ships),Object.values(p2.player.ships)].forEach(player => {
@@ -600,14 +637,14 @@ function checkGameState() {
     console.log("################### END #####################")
     return;
 
-    switch (status.goto) {
+    switch (state.goto) {
         case 'firstBlood': {
                 if ( [p1.player.hits,p2.player.hits].reduce((acc,current) => {
                     acc += Object.values(current).length },0)
-                > 1 && !status.firstBlood ) {
-                    status.winner = status.turn;
-                    status.firstBlood = true; 
-                    status.goto = 'firstSunkenShip';
+                > 1 && !state.firstBlood ) {
+                    state.winner = state.turn;
+                    state.firstBlood = true; 
+                    state.goto = 'firstSunkenShip';
                     saveState('full');
                     gotoNarrative(/*part2*/) }
             } break;
@@ -615,9 +652,9 @@ function checkGameState() {
             [Object.values(p1.player.ships),Object.values(p2.player.ships)].forEach(player => {
                 player.forEach(ship => {
                     if (ship.hits.length === ship.area()) {
-                        status.winner = status.turn;
-                        status.firstSunkenShip = true;
-                        status.goto = 'turningPoint';
+                        state.winner = state.turn;
+                        state.firstSunkenShip = true;
+                        state.goto = 'turningPoint';
                         saveState('full');
                         gotoNarrative(/*part3*/);
                     }
@@ -630,9 +667,9 @@ function checkGameState() {
                     if (ship.hits.length === ship.area()) acc[player.name]++
                 }), {[p1.player.name]:0,[p2.player.name]:0});
             if (Object.values(reduction).some(result=>result>2)) {
-                status.winner = status.turn;
-                status.turningPoint = true;
-                status.goto = 'victoryInSight';
+                state.winner = state.turn;
+                state.turningPoint = true;
+                state.goto = 'victoryInSight';
                 saveState('full');
                 gotoNarrative(/*turningPoint*/);
             }
@@ -643,9 +680,9 @@ function checkGameState() {
                     if (ship.hits.length === ship.area()) acc[player.name]++
                 }), {[p1.player.name]:0,[p2.player.name]:0});
             if (Object.values(reduction).some(result=>result>3)) {
-                status.winner = status.turn;
-                status.victoryInSight = true;
-                status.goto = 'winner';
+                state.winner = state.turn;
+                state.victoryInSight = true;
+                state.goto = 'winner';
                 saveState('full');
                 gotoNarrative(/*victoryInSight*/);
             }
@@ -656,14 +693,102 @@ function checkGameState() {
                     if (ship.hits.length === ship.area()) acc[player.name]++
                 }), {[p1.player.name]:0,[p2.player.name]:0});
             if (Object.values(reduction).some(result=>result===5)) {
-                status.winner = status.turn;
-                status.winGame = true;
-                status.goto = 'summary';
+                state.winner = state.turn;
+                state.winGame = true;
+                state.goto = 'summary';
                 saveState('full');
                 winGame();
                 gotoNarrative(/*Q's Riddle*/);
             }
         } break;
+    }
+}
+
+async function testPhaser() {
+    console.log('##########################################################');
+    [p1,p2].forEach(px=>px.board.mode('dissable-subspace'));
+    const delay=()=>new Promise((resolve)=>setTimeout(()=>resolve(),45))
+
+    const input = {
+        originBoard:null,
+        targetBoard:null,
+        originCell: '1821',
+        targetCell: '1208',
+        testCell: '1109'
+    };
+    await new Promise((resolve,reject)=>{
+        headerEl.textContent = "set originCell";
+        document.addEventListener('keypress', (e)=>{e.key==='q' && reject()})
+        let count = 0;
+        document.querySelector('main').addEventListener('click', (e)=>{
+            if (!e.target.classList.contains('cell')) return;
+            const elements = document.elementsFromPoint(e.clientX,e.clientY)
+            // console.log(elements)
+            if (count===0 && elements.includes(p1.board.target)) {input.originBoard = 1; input.targetBoard = 2; console.log("BOARD 1 CLICKED", elements)};
+            if (count===0 && elements.includes(p2.board.target)) {input.originBoard = 2; input.targetBoard = 1;console.log("BOARD 2 CLICKED", elements)};
+            switch (count) {
+                case 0: {input.originCell = e.target.id; count++; headerEl.textContent = "set targetCell"}; break;
+                case 1: {input.targetCell = e.target.id; count++; headerEl.textContent = "set testCell"}; break;
+                case 2: {input.testCell = e.target.id; count++; headerEl.textContent = "Calculating. . ."}; break;
+            }
+            e.target.classList.add('targetedCell');
+            if (count === 3) resolve();
+        });
+    });
+    // console.log("SENT: ", input.originBoard, input.originCell, input.targetCell, input.testCell)
+    const call = rayIntersect(input.targetBoard, input.targetCell, input.originCell, input.testCell);
+    // if (call) {cells[input.testCell].target.classList.add('hitCell',  'phaseCannon')
+    // } else cells[input.testCell].target.classList.add('missCell',  'phaseCannon')
+    
+    let cells =  p1.board.cells; let cell;
+    for (cell in cells) {
+        if (rayIntersect(input.targetBoard, input.originCell, input.targetCell, cell)) {
+            cells[cell].target.classList.add('hitCell',  'phaseCannon');
+            await delay();
+        }
+        if (rayIntersect(input.targetBoard, input.targetCell, input.originCell, cell)) {
+            cells[cell].target.setAttribute('style','border:2px solid yellow');
+        }
+        if (input.targetBoard===1) {
+            cells[input.testCell].target.classList.remove('hitCell');
+            cells[input.testCell].target.classList.add('impededCell');
+            cells[input.targetCell].target.classList.replace('hitCell', 'targetedCell');
+        } else {cells[input.originCell].target.classList.replace('hitCell', 'missCell');}
+    }
+
+    cells =  p2.board.cells;
+    for (cell in cells) {
+        if (rayIntersect(input.originBoard, input.originCell, input.targetCell, cell)) {
+            cells[cell].target.classList.add('hitCell',  'phaseCannon');
+            await delay();
+        }
+        if (rayIntersect(input.origin, input.targetCell, input.originCell, cell)) {
+            cells[cell].target.setAttribute('style','border:2px solid yellow');
+        }
+        if (input.targetBoard===2) {
+            cells[input.testCell].target.classList.remove('hitCell');
+            cells[input.testCell].target.classList.add('impededCell');
+            cells[input.targetCell].target.classList.replace('hitCell', 'targetedCell');
+        } else {cells[input.originCell].target.classList.replace('hitCell', 'missCell');}
+    }
+
+    headerEl.textContent = call;
+
+    if (input.targetBoard===1) {
+        cells =  Object.values(p1.ships).map(ship=>ship.location[1]).flat();
+        for (cell of cells) { 
+            if (rayIntersect(input.targetBpard, input.originCell, input.targetCell, cell.key)) {
+                cell.target.classList.replace('hitCell',  'impededCell')
+            }
+        }
+    } else {
+        cells =  Object.values(p2.ships).map(ship=>ship.location[1]).flat();
+        for (cell of cells) {
+            if (rayIntersect(input.targetBpard, input.originCell, input.targetCell, cell.key)) {
+                cell.target.classList.replace('hitCell',  'impededCell')
+            }
+        }
+        
     }
 }
 

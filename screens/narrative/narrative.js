@@ -69,7 +69,7 @@ function render(goto, winner) {
             useTitle = story[goto].title;
             continueBtn.classList.add('active');
             continueBtn.addEventListener('click', exitStoryMode)
-            setTimeout(()=>continueBtn.classList.replace('dblue', 'red'), 30000);
+            setTimeout(()=>continueBtn.classList.replace('sdblue', 'red'), 30000);
         } break;
         case 'part1': {
             winner = 'user'; 
@@ -160,7 +160,7 @@ function handleResponse(e,prompt,useOutcome) {
 
     if (handleWinCondition===2) {handleTextResponse(e,prompt); return;}
     
-    continueBtn.classList.replace('dblue', 'red');
+    continueBtn.classList.replace('sdblue', 'red');
     continueBtn.classList.add('active');
     const curry = (e) => handleOutcomes(e,useOutcome);
     if (prompt.outcomes.length > 0) {

@@ -5,16 +5,26 @@ export default class Ships {
     ships = {};
     constructor(userConfig) {
         this.useOffset = (userConfig.ships?.useOffset ?? userConfig.useOffset) || true;
-        Object.values(ships[userConfig.side]).forEach(obj => {
-            const ship = Object.create(obj);
-            userConfig.ships && userConfig.ships[ship.name]['location'] 
-                && (ship['location'] = userConfig.ships[ship.name]['location']);
-            ship['hits'] = [];
-            userConfig.ships && userConfig.ships[ship.name].hits 
-                && ship.hits.push(...userConfig.ships[ship.name].hits);
+        Object.values(ships[userConfig.side]).forEach(templateShip => {
+            const ship = Object.create(templateShip);
+            for (let key in templateShip) {ship[key] = templateShip[key]}
+
+            if (userConfig.ships) {
+                if (userConfig.ships[templateShip.name].location) {
+                    const existing =  userConfig.ships[templateShip.name].location;
+                    ship['location'] = existing;
+                    ship.location[1] = Ships.rebuildCellArray(existing[1], userConfig.board.cells);
+                }
+                if (userConfig.ships.hits) {
+                    const existing =  userConfig.ships[templateShip.name].hits;
+                    ship['hits'] = Ships.rebuildCellArray(existing, userConfig.board.cells);
+                } else {ship['hits'] = []};
+            }
+
             ship['useOffset'] = userConfig.useOffset;
             ship['area'] = Ships.area.bind(ship);
             ship['offset'] = Ships.offset.bind(ship);
+
             Object.entries(ship.weapons).forEach(([name,weapon]) => {
                 weapon['name'] = Ships.weapons[name].name;
                 weapon['max'] = Ships.weapons[name].max;
@@ -28,6 +38,7 @@ export default class Ships {
     // SHIP METHODS
     static area(){return this.sillhouette.flat().filter(c=>c==1).length}
     static offset(){return this.useOffset ? Math.floor(this.width / 2) : 0}
+    static rebuildCellArray = (arr,cells) => arr.map(cell=>cells[cell.key]);
     getWeaponSymbol = (weapon) => Ships.weapons[weapon].symbol;
 
     static weapons = {
@@ -38,8 +49,9 @@ export default class Ships {
             info: () => `<li>Select a target on the enemy's board and fire.</li><li>Photon torpedos navigate around obstacles to hit the desired target, exploding there if ti doesn't contact a ship.`,
             fire(originBoardNum, originCell, targetCell, opponentShips) {
                 const unhitCells = Object.values(opponentShips).map(ship=>ship.location[1].filter(cell=>!cell.hit));
-                if (targetCell.committedCell) 
-                    return Ships.weapons.handleHit(targetCell, opponentShips, {originCell, type:'photonTorpedo'});
+                if (targetCell.committedCell) {
+                    return Ships.weapons.handleHit(targetCell, {originCell, type:'photonTorpedo'})
+                } else {return Ships.weapons.handleMiss(targetCell, {originCell, type:'photonTorpedo'})}
             }
         },
         phaseCannon: {
@@ -48,13 +60,14 @@ export default class Ships {
             max: 4,
             info: () => `<li>Location Revealing</li><li>Set a target(s) point anywhere on the enemy's board & fire a shot. The phaseCannon will hit the first thing it comes in contact with</li><li>Does not hit your own ships</li>`,
             fire(originBoardNum, originCell, targetCell, opponentShips) {
-                const unhitCells = Object.values(opponentShips).map(ship=>ship.location[1].filter(cell=>!cell.hit));
+                const unhitCells = Object.values(opponentShips).map(ship=>ship.location[1].filter(cell=>!cell.hit)).flat(1);
                 const intersects = [];
+                console.log("Map Opponent Ship", Object.values(opponentShips).map(ship=>ship))
                 unhitCells.forEach(cell=>{
                     if (rayIntersect(originBoardNum, originCell.target.id, targetCell.target.id, cell.target.id)) 
                         intersects.push(cell);
                 });
-                if (unhitCells.length === 0) return false;
+                if (unhitCells.length === 0) return "Miss! The Phase Cannon did not hit any targets."
     
                 const origin = parse(originCell.target.id);
                 const closest = intersects.reduce((best, cell) => {
@@ -76,8 +89,17 @@ export default class Ships {
         },
         handleHit(targetCell, obj) { // obj = {originCell, type:'photonTorpedo'}
             targetCell['hit'] = obj;
-            targetCell.target.classList.add('hit-cell');
-            return `Taregt hit! ${targetCell.target.id}`
+            targetCell.target.classList.remove('targetedCell');
+            targetCell.target.classList.add('hitCell');
+            targetCell.target.classList.add(obj.type);
+            return `Target hit! (${targetCell.target.classList[0]})`
+        },
+        handleMiss(targetCell, obj) {
+            targetCell['miss'] = obj;
+            targetCell.target.classList.remove('targetedCell');
+            targetCell.target.classList.add('missCell');
+            targetCell.target.classList.add(obj.type);
+            return `Target Miss! (${targetCell.target.classList[0]}))`
         }
     }
 }

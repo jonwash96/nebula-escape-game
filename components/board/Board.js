@@ -11,7 +11,7 @@ export default class Board {
 		this.follow = options?.follow || false;
 		this.enableTargeting = options?.enableTargeting || false;
 		this.boardNumber = Board.boardNumber;
-		this.shipToPlace = null;
+		this.placeItem.item = null;
 		this.cells = boardConfig?.cells || {};
 		this.activeCells = boardConfig?.activeCells || [];
 	};
@@ -21,25 +21,58 @@ export default class Board {
 	static colRow = [['A', 1], ['B', 2], ['C', 3], ['D', 4], ['E', 5], ['F', 6], ['G', 7], ['H', 8], ['I', 9], ['J', 10], ['K', 11], ['L', 12], ['M', 13], ['N', 14], ['O', 15], ['P', 16], ['Q', 17], ['R', 18], ['S', 19], ['T', 20], ['U', 21], ['V', 22], ['W', 23], ['X', 24], ['Y', 25], ['Z', 26]];
 	static dev_mode = false;
 
+
 	// PRIV
 	#restore;
+
+
+	// BUS
+	signal = {
+		data:null,
+		resolve:null,
+		reject:null,
+		set(resolve,reject){
+			this.resolve=resolve;
+			this.reject=reject;
+			console.log("signal recieved:", this.resolve, this.reject)
+		},
+		clear(){['data','resolve','reject']
+			.forEach(i=>i=null) }
+	}
+
+	placeItem = {
+		item:null,
+		resolve:null,
+		reject:null,
+		data:null,
+		count:0,
+		next(max,data){this.item.remaining===max && this.done(data)},
+		done(data){this.resolve(data); this.clear()},
+		abort(data){this.reject(data); this.clear()},
+		clear() {['item','resolve','reject','data'].forEach(i=>this[i] = null); this.count=0},
+		set(item,resolve,reject,data) {
+			['item','resolve','reject','data']
+				.forEach((a,i)=>this[a] = arguments[i]);
+			console.log("item recieved:", item, data, resolve, reject);
+		}
+	}
 
 	// OBJ
 	cells = {};
 	placedShips = {};
 	status = {mode:'init'};
 
+
 	// VAR
 	hoverCells = [];
 	activeCells = [];
 	pointerCell;
-	shipToPlace;
-	donePlacingShip;
 	shipRotation = 0;
 	bracketOffset;
 
+
 	// INIT
-	async render() { new Promise((resolve) => {
+	render() {
 		this.targetingEl.innerHTML = `
 		<section class="targeting-system">
 			<div class="crosshairs xhv hide"></div>
@@ -94,11 +127,10 @@ export default class Board {
 		this.crosshairH['ypos'] = window.innerHeight / 2;
 
 		this.update();
-		resolve(console.log("Create Board number", this.boardNumber)) }); 
-	}
+		return(console.log("BOARD number", this.boardNumber, "created")) 
+	} 
 
 	createBoard() {
-		console.log("BUILD BOARD FOR ", Board.boardNumber, this.#restore)
 		for (let i = 0; i < 26; i++) {
 			this.numbers.forEach(self => {
 				const el = document.createElement('div');
@@ -118,7 +150,8 @@ export default class Board {
 				const el = document.createElement('div');
 				let key = `${String(i + 1).padStart(2, '0')}${String(k + 1).padStart(2, '0')}`;
 				el.id = key;
-				el.classList.add(`${Board.colRow[i][0]}${c[1]}`);
+				const name = `${Board.colRow[i][0]}${c[1]}`;
+				el.classList.add(name);
 				el.classList.add('cell', 'hover-cell');
 				row.appendChild(el);
 				if (this.#restore) {
@@ -126,23 +159,23 @@ export default class Board {
 					this.cells[key].hit && el.classList.add('hitCell');
 					this.cells[key].miss && el.classList.add('missCell');
 					this.cells[key]['target'] = el;
-				} else {this.cells[key] = {target:el}}
+				} else {this.cells[key] = {key, name, target:el}}
 			});
 			this.container.appendChild(row);
 		}
 	}
 
-    // FUNC
-    mode(option) {
+
+    // MANAGEMENT
+    mode(option,data) {
         option && (this.status.mode = option);
-		console.log("Board "+this.boardNumber+" Mode Set:", option);
+		option && console.log("Board "+this.boardNumber+" Mode Set:", option, "with", data);
         switch (option) {
             case 'place-ships': {
 				this.target.addEventListener('click', this.placeShip.bind(this));
 				Object.values(this.cells).forEach(cell => {
 					if (cell.committedCell) cell.target.classList.add('committedCell')});
 				this.brackets.classList.remove('hide');
-				this.target.classList.add('active-mode');
 			} break;
 			case 'targeting': {
 				this.activeCells = [];
@@ -151,31 +184,38 @@ export default class Board {
 				this.crosshairs.forEach(el=>el.classList.remove('hide'));
 				// this.brackets.classList.remove('hide');
 				this.target.addEventListener('click', this.placeShot.bind(this));
-				this.target.classList.add('active-mode');
 				this.mode('subspace');
 			} break;
 			case 'static': {
 				this.target.removeEventListener('click', this.placeShip.bind(this));
-				this.target.classList.add('static-mode');
 				// Object.values(this.cells).forEach(cell => {
 				// 	if (cell.committedCell) cell.target.classList.add('committedCell')});
 				this.targeting.classList.add('hide');
 			} break;
 			case 'subspace': { 
+				this.target.classList.add('subspace-mode');
 				Object.values(this.cells).forEach(cell => {
-				if (cell.committedCell) cell.target.classList.remove('committedCell') })
-					this.target.classList.add('subspace-mode');
+					if (cell.committedCell) cell.target.classList.remove('committedCell')
+				}); this.doCleanCellResidue();
+			} break;
+			case 'dissable-subspace': { 
+				this.target.classList.remove('subspace-mode');
+				Object.values(this.cells).forEach(cell => {
+					if (cell.committedCell) cell.target.classList.add('committedCell') 
+				}); this.doCleanCellResidue();
 			} break;
 			case 'toggle-subspace': { 
-				Object.values(this.cells).forEach(cell => {
-				if (cell.committedCell) cell.target.classList.toggle('committedCell') })
 				this.target.classList.toggle('subspace-mode');
+				Object.values(this.cells).forEach(cell => {
+					if (cell.committedCell) cell.target.classList.toggle('committedCell') 
+				}); this.doCleanCellResidue();
 			} break;
 			default: {return this.status.mode}
         }
     }
 
-	// EVENT HANDLERS
+
+	// EVENTS
 	handleMouseMove(e) {
 		const hoverOver = document.elementsFromPoint(e.clientX,e.clientY);
 		if (hoverOver.includes(this.target)) {
@@ -190,19 +230,12 @@ export default class Board {
 				this.brackets.xpos = remap(e.clientX, 0, window.innerWidth, this.bracketOffset[0], this.bracketOffset[1]);
 				this.brackets.ypos = remap(e.clientY, -50, window.innerHeight, window.innerHeight*0.2, window.innerHeight*0.85);
 			};
-			if (this.shipToPlace && hoverOver[0]!==this.pointerCell) this.hoverSillhouette(hoverOver);
+			if (this.mode()==='place-ships' && this.placeItem.item && hoverOver[0]!==this.pointerCell) this.hoverSillhouette(hoverOver);
 		} else if (!hoverOver.includes(Board)) {
 			this.targeting.classList.add('hide');
 			this.cleanCellResidue && this.doCleanCellResidue();
 		}
 		this.update();
-	}
-
-	setBracketOffset(direction) {
-		switch (direction) {
-			case 'left': this.bracketOffset = [window.innerWidth*0.28, window.innerWidth*0.86]; break;
-			case 'right': this.bracketOffset = [window.innerWidth*0.28, window.innerWidth*0.86]; break;
-		}
 	}
 
 	handleKeyPress(e) {
@@ -213,8 +246,17 @@ export default class Board {
 			case 'b': {this.brackets.classList.toggle('hide')} break;
 			case 'd': {this.disc.classList.toggle('hide')} break;
 			case 'r': {this.shipRotation -= 90; this.shipRotation < 0 && (this.shipRotation = 360)} break;
-			case 'x': {if (this.mode()==='place-ships') {this.shipToPlace = null; this.doCleanCellResidue()}} break;
+			case 'x': {if (this.mode()==='place-ships') {this.placeItem.item = null; this.doCleanCellResidue()}} break;
 			case 's': {this.root.classList.contains('active-board') && this.mode('toggle-subspace')} break;
+		}
+	}
+
+
+	// FUNC
+	setBracketOffset(direction) {
+		switch (direction) {
+			case 'left': this.bracketOffset = [window.innerWidth*0.28, window.innerWidth*0.86]; break;
+			case 'right': this.bracketOffset = [window.innerWidth*0.28, window.innerWidth*0.86]; break;
 		}
 	}
 
@@ -237,15 +279,15 @@ export default class Board {
 		});
 		this.activeCells.forEach(a=>a.target.classList.remove(`impededCell`));
 		this.hoverCells = [];
-		const ship = this.shipToPlace;
+		const ship = this.placeItem.item;
 		try {hoverOver[0].id} catch (err) {console.trace("What is: cell? (Board: 203)",hoverOver)};
 		let cell = hoverOver[0].id;
 		// console.log("What is: this?",this);
-		// console.log("What is: shipToPlace?", Object.values(this)[6]);
-		this.shipToPlace.sillhouette.forEach((row,i)=> {
+		// console.log("What is: placeItem.item?", Object.values(placeItem.item));
+		this.placeItem.item.sillhouette.forEach((row,i)=> {
 			row.forEach((c,k)=>{
 				if (c==1) {
-					const alter = this.cells[this.cast(this.shipToPlace, Number(cell), this.shipRotation, i,k)];
+					const alter = this.cells[this.cast(this.placeItem.item, Number(cell), this.shipRotation, i,k)];
 					try {
 					if (alter.target.classList.contains(`committedCell`)) {
 						alter.target.classList.add(`impededCell`)
@@ -260,15 +302,9 @@ export default class Board {
 		return(this.hoverCells);
 	}
 
-	setShipToPlace(ship,resolve) {
-		this.shipToPlace = ship; 
-		this.donePlacingShip = resolve;
-		console.log("ship recieved:", ship);
-	}
-
     placeShip(e) {
-		if (!this.shipToPlace) return;
-		let ship = this.shipToPlace;
+		if (!this.placeItem.item) return;
+		let ship = this.placeItem.item;
 		const stagedCells = [];
 		let alter;
 		if (e.target.classList.contains(`cell`)) {
@@ -294,12 +330,12 @@ export default class Board {
 		if (stagedCells.length > 1 && stagedCells.every(c=>!c.target.classList.contains(`forbiddenCell`))) {
 			stagedCells.forEach(c=>c.target.classList.add(`committedCell`));
 			stagedCells.forEach(c=>c['committedCell'] = true);
-			this.activeCells.push(); //!
+			this.activeCells.push(...stagedCells); //!
 			console.log("Cells Pushed!", stagedCells); //!
-			this.shipToPlace['location'] = [e.target.id, stagedCells];
-			this.placedShips[this.shipToPlace.name] = this.shipToPlace;
-			this.shipToPlace = null;
-			this.donePlacingShip();
+			this.placeItem.item['location'] = [e.target.id, stagedCells];
+			this.placedShips[this.placeItem.item.name] = this.placeItem.item;
+			this.placeItem.item = null;
+			this.placeItem.done();
 			this.doCleanCellResidue();
 			return true;
 		} else {
@@ -308,36 +344,6 @@ export default class Board {
 			return false;
 		}; //!
 		
-	}
-
-	signal = {
-		data:null,
-		resolve:null,
-		reject:null,
-		set(resolve,reject){
-			this.resolve=resolve;
-			this.reject=reject;
-			console.log("signal recieved:", this.resolve, this.reject)
-		},
-		clear(){['data','resolve','reject']
-			.forEach(i=>i=null) }
-	}
-
-	placeItem = {
-		item:null,
-		resolve:null,
-		reject:null,
-		data:null,
-		count:0,
-		next(max,data){this.item.remaining===max && this.done(data)},
-		done(data){this.resolve(data); this.clear()},
-		abort(data){this.reject(data); this.clear()},
-		clear() {['item','resolve','reject','data'].forEach(i=>this[i] = null); this.count=0},
-		set(item,resolve,reject,data) {
-			['item','resolve','reject','data']
-				.forEach((a,i)=>this[a] = arguments[i]);
-			console.log("item recieved:", item);
-		}
 	}
 
 	placeShot(e) {
@@ -369,14 +375,14 @@ export default class Board {
 
 	async handleFire(ships, resolve) {
 		const delay = () => new Promise((geaux)=>setTimeout(()=>geaux(),1000));
+		console.log("Active Cells", this.activeCells)
 		for (let cell of this.activeCells) {
 			cell['weapon'] = cell.target.weapon;
 			cell['originCell'] = cell.target.originCell
 			const weapon = cell.weapon;
 			const originCell = cell.originCell;
 			const originBoardNum = this.boardNumber===1 ? 2 : 1; 
-			console.log("Board calls FIRE; Weapon:", weapon)
-			console.log("Board calls FIRE; .fire", weapon.fire)
+			console.log("Board calls FIRE from "+originCell.name+" with "+weapon.name+" ("+weapon.remaining+") Reamining shots")
 			console.log(weapon.fire(originBoardNum, originCell, cell, ships));
 			await delay();
 		};
@@ -393,7 +399,7 @@ export default class Board {
     }
 
 	cleanCellResidue = false;
-	doCleanCellResidue() { Object.values(this.activeCells).forEach(c => {
+	doCleanCellResidue() { this.activeCells.length > 0 && this.activeCells.forEach(c => {
 		c.target.classList.contains(`impededCell`) && c.target.classList.remove(`impededCell`);
 		c.target.classList.contains(`hoverCell`) && c.target.classList.remove(`hoverCell`);
 		c.target.classList.contains(`forbiddenCell`) && c.target.classList.remove(`forbiddenCell`);

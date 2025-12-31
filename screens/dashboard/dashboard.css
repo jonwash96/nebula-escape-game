@@ -1,6 +1,6 @@
 body {
     margin:0;
-    background: var(--dblue);
+    background: var(--sdblue);
     background-size:cover;
     width:100vw;
     height:100vh;
@@ -90,9 +90,9 @@ main {
             height: 98%;
             /* border: 1px solid violet; */
             
-            & svg.brkt-placed-ship {opacity:0.5;}
+            & .placed-ship svg {opacity:0.5;}
             & svg {
-                fill: var(--dblue);
+                fill: var(--sdblue);
                 height:100%;
                 pointer-events: none;
             }
@@ -138,7 +138,7 @@ main {
             /* border: 1px solid violet; */
             
             & svg {
-                fill: var(--dblue);
+                fill: var(--sdblue);
                 pointer-events: none;
             }
         }
@@ -155,7 +155,7 @@ main {
                 gap: 6px;;
             }
 
-            & .weapon-symbol svg {height:100%;fill:var(--dblue);}
+            & .weapon-symbol svg {height:100%;fill:var(--sdblue);}
             & .weapon-symbol:hover svg {cursor:pointer;fill:var(--dgold);}
 
             & .selected-weapon svg {fill: var(--blue);}
@@ -196,9 +196,9 @@ main {
             height: 98%;
             /* border: 1px solid violet; */
             
-            & svg.brkt-placed-ship {opacity:0.5;}
+            & svg.placed-ship {opacity:0.5;}
             & svg {
-                fill:var(--dblue);
+                fill:var(--sdblue);
                 height:100%; 
                 pointer-events: none;
             }
@@ -239,7 +239,7 @@ main {
             /* border: 1px solid violet; */
             
             & svg {
-                fill: var(--dblue);
+                fill: var(--sdblue);
                 pointer-events: none;
             }
         }
@@ -258,7 +258,7 @@ main {
             }
         }
     
-        & .weapon-symbol svg {height:100%;fill:var(--dblue);}
+        & .weapon-symbol svg {height:100%;fill:var(--sdblue);}
         & .weapon-symbol:hover svg {cursor:pointer;fill:var(--blue);}
         
         & .targeting-panel.enemy {
@@ -284,7 +284,7 @@ main {
 
 #db-grid-container {
     position:relative;
-    background: linear-gradient(to bottom right, var(--dblue), var(--steelblue));
+    background: var(--sdblue-steelblue);
     background-size:cover;
     display: grid;
     width: 100vw;

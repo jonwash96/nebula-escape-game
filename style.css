@@ -3,33 +3,46 @@
 * {
     box-sizing: border-box;
 
-    --dblue: #000124;
+    --lsteelblue: #406c8f;
     --steelblue: #003c5f;
+    --lcyan: #80caff;
     --cyan: rgb(0, 195, 255);
-    --lcyan: #8bf;
     --dustycyan: rgb(100, 175, 205);
+    --lgold: #fff34b;
     --gold: #f9c31b;
     --dgold: #c9a300;
     --sdgold: #996306;
-    --blue: #13f;
     --lblue: #37f;
+    --blue: #13f;
+    --mblue: #36f;
+    --dblue: #102164;
+    --sdblue: #000124;
+    --lmidnight: #2f3e4f;
     --midnight: #0f1e2f;
-    --red: #f00;
     --lred: #f88;
+    --red: #f00;
+    --dred: #c00;
 
-    --dblue-steelblue: linear-gradient(to bottom right, var(--dblue), var(--steelblue));
+    --sdblue-steelblue: linear-gradient(to bottom right, var(--sdblue), var(--steelblue));
 
     font-family: Montserrat, Arial, sans-serif;
 }
 
 /* COLORWAYS */
 .red {background-color:var(--red) !important;color:white !important;}
+.tile-btn.active.red:hover {background-color:var(--lred) !important;color:white !important;}
 .midnight {background-color:var(--midnight) !important;color:white !important;}
-.dblue {background-color:var(--dblue) !important;color:white !important;}
+.tile-btn.active.midnight:hover {background-color:var(--lmidnight) !important;color:white !important;}
+.sdblue {background-color:var(--sdblue) !important;color:white !important;}
+.tile-btn.active.sdblue:hover {background-color:var(--dblue) !important;color:white !important;}
 .steelblue {background-color:var(--steelblue) !important;color:white !important;}
+.tile-btn.active.steelblue:hover {background-color:var(--lsteelblue) !important;color:white !important;}
 .blue {background-color:var(--blue) !important;color:white !important;}
+.tile-btn.active.blue:hover {background-color:var(--lblue) !important;color:white !important;}
 .cyan {background-color:var(--cyan) !important;color:var(--dblue) !important;}
+.tile-btn.active.cyan:hover {background-color:var(--lcyan) !important;color:var(--dblue) !important;}
 .gold {background-color:var(--gold) !important;}
+.tile-btn.active.gold:hover {background-color:var(--lgold) !important;}
 
 /* STYLES */
 .hide {display: none !important;}
@@ -55,16 +68,7 @@
 
 .tile-btn.active:hover {
     cursor:pointer;
-
-    &::before {
-        content:"";
-        position: absolute;
-        width:175px;
-        height:60px;
-        background-color: #fff2;
-        transform: translate(-57px, -22px);
-    }
- }
+}
 
 .tile-btn.disabled {
     pointer-events:none;

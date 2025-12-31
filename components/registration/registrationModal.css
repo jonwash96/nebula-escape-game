@@ -9,7 +9,7 @@ body {
 #registration-modal {
     width:980px;
     border: 1px solid var(--gold);
-    background: var(--dblue-steelblue);
+    background: var(--sdblue-steelblue);
     color:white;
     padding:3em;
     box-shadow: 0 0 30px #023a;
