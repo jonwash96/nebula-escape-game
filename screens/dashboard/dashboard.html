@@ -22,7 +22,7 @@
         <h1>Switch User</h1>
         <h2>player name</h2>
         <p></p>
-        <input type="password" class="textbox" />
+        <input type="password" class="textbox"></input>
         <div class="btn-block">
             <button type="button" class="tile-btn blue clickable">Ok</button>
         </div>
@@ -35,16 +35,28 @@
             <button type="button" class="tile-btn blue active"></button>
         </div>
     </dialog>
+    <dialog id="dev-instance-modal" class="midnight">
+        <h1 class="title"></h1>
+        <h2 class="subhead"></h2>
+        <p class="message"></p>
+        <input type="text" class="textbox" placeholder="eval">
+        <input type="text" class="textbox" placeholder="console.log">
+        <div class="btn-block">
+            <button type="button" class="tile-btn blue active"></button>
+            <button type="button" class="tile-btn steelblue active">Toggle Keyboard Mode</button>
+        </div>
+    </dialog>
 
     <main>
-        <section id="load-targeting-system"></section>
+        <section id="p1-load-targeting-system"></section>
+        <section id="p2-load-targeting-system"></section>
         <section id="p1-board" class=""></section> 
         <section id="p2-board" class=""></section>
     </main>
     <div id="db-text-overlay">
         <header id="game-status-header" class="header"></header>
 
-        <div id="p1-summary-text-overlay">summ</div>
+        <div id="p1-summary-text-overlay" class="summary-text-overlay">summ</div>
         <div id="p1-ships-text-overlay">
             <div class="ships"></div>
             <button id="p1-ships-btn" type="button" class="tile-btn-mini hide">Done</button>
@@ -55,7 +67,7 @@
             </div>
         </div>
 
-        <div id="p2-summary-text-overlay">summ</div>
+        <div id="p2-summary-text-overlay" class="summary-text-overlay">summ</div>
         <div id="p2-ships-text-overlay">
             <div class="ships"></div>
             <button id="p2-ships-btn" type="button" class="tile-btn-mini hide">Done</button>
@@ -99,7 +111,7 @@
         <div id="db-controls-grid" class="component-container">
             <div id="attack-controls" class="db-controls left">
                 <button id="btn-fire" class="tile-btn red disabled">Fire</button>
-                <button id="" class="tile-btn cyan"></button>
+                <button id="dev_recover" class="tile-btn cyan active">dev_recover</button>
                 <button id="turn-timer" class="tile-btn blue">00:00.00</button>
                 <button id="btn-switch-user" class="tile-btn sdblue"></button>
                 <button id="dev_toggle-opp-subspace" class="tile-btn cyan">dev_toggle-opp-subspace</button>

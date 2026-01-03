@@ -8,16 +8,38 @@ export default class BOT {
         this.difficulty = botConfig.difficulty;
         this.side = botConfig.side || 'enemy';
         this.gameKey = botConfig.gameKey;
-        this.shipsClass = new Ships(botConfig);
-        this.ships = this.shipsClass.ships;
-        
+
+        this.shipsConstructor = new Ships(botConfig);
+        this.ships = this.shipsConstructor.ships;
         this.board = new Board (boardEl, botConfig.board, options);
         this.board.mode('enable-bot-board');
+
+        this.update = userConfig.update || Date.now();
+        this.score = userConfig.score || 0;
+        this.hits = userConfig.hits || [];
+        this.misses = userConfig.misses || [];
+        this.damage['health'] = userConfig.health
+            || Object.values(this.ships).reduce((accumulator,ship) =>{
+                accumulator += ship.area() },0);
+
+        console.log("BOT created");
     }
 
-    score = 0;
-    hits = [];
-    misses = [];
+    // CONSTRUCTORS
+    PlayerState() {
+        let item;
+        const botState = {};
+
+        for (item of ['name','username','diffficulty']) {
+            botState[item] = this[item] 
+        };
+        for (item of ['gamekey','update','side','hits','misses','health','score','board','ships']) {
+            if (item==='health') {botState['health'] = this.damage.health;
+            } else {botState[item] = this[item]} 
+        };
+        
+        return botState;
+    }
 
     damage = {
         health: 0,

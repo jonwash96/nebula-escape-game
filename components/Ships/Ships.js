@@ -92,14 +92,16 @@ export default class Ships {
             targetCell.target.classList.remove('targetedCell');
             targetCell.target.classList.add('hitCell');
             targetCell.target.classList.add(obj.type);
-            return `Target hit! (${targetCell.target.classList[0]})`
+            console.log(`Target Hit! (${targetCell.target.classList[0]})`);
+            return ['Hit', targetCell];
         },
         handleMiss(targetCell, obj) {
             targetCell['miss'] = obj;
             targetCell.target.classList.remove('targetedCell');
             targetCell.target.classList.add('missCell');
             targetCell.target.classList.add(obj.type);
-            return `Target Miss! (${targetCell.target.classList[0]}))`
+            console.log(`Target Miss! (${targetCell.target.classList[0]}))`);
+            return ['Miss', targetCell];
         }
     }
 }

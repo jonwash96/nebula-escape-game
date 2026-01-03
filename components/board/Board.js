@@ -34,7 +34,7 @@ export default class Board {
 		set(resolve,reject){
 			this.resolve=resolve;
 			this.reject=reject;
-			console.log("signal recieved:", this.resolve, this.reject)
+			console.log(". . .signal recieved:", this.resolve, this.reject)
 		},
 		clear(){['data','resolve','reject']
 			.forEach(i=>i=null) }
@@ -69,14 +69,13 @@ export default class Board {
 	pointerCell;
 	shipRotation = 0;
 	bracketOffset;
+	enableKeyboard = false;
 
 
 	// INIT
 	render() {
 		this.targetingEl.innerHTML = `
-		<section class="targeting-system">
-			<div class="crosshairs xhv hide"></div>
-			<div class="crosshairs xhh hide"></div>
+		<section class="targeting-system hide">
 			<svg class="targeting-disc hide" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 157.06 155.27"><defs><style>.cls-1{fill:none;stroke:#f9c31b;stroke-miterlimit:10;stroke-width:4px;}.cls-2{fill:aqua;}</style></defs><g id="Layer_1-2">
 				<path class="cls-2" d="M128.76,77.63c0-6.89-1.39-13.45-3.91-19.42,0-.02-.01-.03-.02-.05-2.57-6.06-6.3-11.52-10.91-16.08L151.35,5.05l4.42,4.89c1.46,1.61,1.71,3.97.62,5.85-5.11,8.86-19.24,33.32-19.24,33.32,4.23,8.62,6.61,18.3,6.61,28.52,0,10.23-2.38,19.91-6.61,28.53l19.24,33.32c1.09,1.88.83,4.25-.62,5.86l-4.42,4.89-37.43-37.03c4.61-4.56,8.34-10.01,10.91-16.08,0-.02.01-.03.02-.05,2.52-5.97,3.91-12.54,3.91-19.42M144.21,113.38c5.82-10.62,9.14-22.8,9.14-35.74s-3.31-25.12-9.13-35.74l-2.38,4.06c4.81,9.53,7.51,20.29,7.51,31.68s-2.7,22.13-7.5,31.65l2.36,4.1ZM28.3,77.54c0,6.89,1.39,13.45,3.91,19.42,0,.02.01.03.02.05,2.57,6.06,6.3,11.52,10.91,16.08L5.72,150.12l-4.42-4.89c-1.46-1.61-1.71-3.98-.62-5.86l19.24-33.32c-4.22-8.62-6.61-18.3-6.61-28.53,0-10.23,2.38-19.91,6.61-28.52,0,0-14.13-24.47-19.24-33.32-1.09-1.88-.83-4.24.62-5.85l4.42-4.89,37.43,37.03c-4.61,4.56-8.34,10.01-10.91,16.08,0,.02-.01.03-.02.05-2.52,5.97-3.91,12.54-3.91,19.42M15.22,109.19c-4.8-9.52-7.5-20.28-7.5-31.65s2.71-22.14,7.51-31.68l-2.38-4.06c-5.82,10.62-9.13,22.8-9.13,35.74s3.31,25.12,9.14,35.74l2.36-4.1Z"/><path class="cls-1" d="M147.59,1.47l-32.8,30.12c-9.93-7.78-22.44-12.42-36.03-12.42-13.59,0-26.1,4.64-36.03,12.42,0,0-33.26-29.7-33.26-29.7M148.05,153.37s-33.26-29.7-33.26-29.7c-9.93,7.78-22.44,12.42-36.03,12.42s-26.1-4.64-36.03-12.42l-32.8,30.12M78.76,27.63c-27.61,0-50,22.39-50,50s22.39,50,50,50,50-22.39,50-50-22.39-50-50-50Z"/>
 			</g></svg>
@@ -108,23 +107,21 @@ export default class Board {
 		this.targeting = this.targetingEl.querySelector(`section.targeting-system`);
 		this.brackets = this.targetingEl.querySelector(`.targeting-brackets`);
 		this.disc = this.targetingEl.querySelector(`.targeting-disc`);
-		this.crosshairs = this.targetingEl.querySelectorAll(`.crosshairs`);
-		this.crosshairV = this.targetingEl.querySelector(`.xhv`);
-		this.crosshairH = this.targetingEl.querySelector(`.xhh`);
 		this.bracketNode = this.targetingEl.querySelector(`.bracket-node > span`);
 		
 		this.createBoard();
 
 		document.addEventListener('keypress', this.handleKeyPress.bind(this));
-		this.root.addEventListener('mousemove',this.handleMouseMove.bind(this));
+		// this.root.addEventListener('mousemove',this.handleMouseMove.bind(this));
+		this.handleMouseMove = this.handleMouseMove.bind(this);
+		this.placeShot =  this.placeShot.bind(this);
+		this.placeShip = this.placeShip.bind(this);
 
 		this.brackets['xpos'] = window.innerWidth / 2;
 		this.brackets['ypos'] = window.innerHeight / 2;
 		this.bracketNode.innerHTML = `${this.brackets.xpos},${this.brackets.ypos}`;
 		this.disc['xpos'] = window.innerWidth / 2; 
 		this.disc['ypos'] = window.innerHeight / 2;
-		this.crosshairV['xpos'] = window.innerWidth / 2;
-		this.crosshairH['ypos'] = window.innerHeight / 2;
 
 		this.update();
 		return(console.log("BOARD number", this.boardNumber, "created")) 
@@ -167,36 +164,39 @@ export default class Board {
 
 
     // MANAGEMENT
-    mode(option,data) {
-        option && (this.status.mode = option);
-		option && console.log("Board "+this.boardNumber+" Mode Set:", option, "with", data);
+    mode(option,data,ctrl) {
+        !ctrl && option && (this.status.mode = option);
+        !ctrl && option && data && (this.status.mode = [option,data]);
+		!ctrl && option && console.log("Board "+this.boardNumber+" Mode Set:", option, "with", data);
+
         switch (option) {
             case 'place-ships': {
-				this.target.addEventListener('click', this.placeShip.bind(this));
+				this.root.addEventListener('mousemove',this.handleMouseMove);
+				this.target.addEventListener('click', this.placeShip);
+				this.brackets.classList.remove('hide');
 				Object.values(this.cells).forEach(cell => {
 					if (cell.committedCell) cell.target.classList.add('committedCell')});
-				this.brackets.classList.remove('hide');
 			} break;
 			case 'targeting': {
 				this.activeCells = [];
 				this.follow = true; 
 				this.disc.classList.remove('hide');
-				this.crosshairs.forEach(el=>el.classList.remove('hide'));
-				// this.brackets.classList.remove('hide');
-				this.target.addEventListener('click', this.placeShot.bind(this));
+				this.root.addEventListener('mousemove',this.handleMouseMove);
+				this.target.addEventListener('click', this.placeShot);
 				this.mode('subspace');
 			} break;
 			case 'static': {
-				this.target.removeEventListener('click', this.placeShip.bind(this));
-				// Object.values(this.cells).forEach(cell => {
-				// 	if (cell.committedCell) cell.target.classList.add('committedCell')});
+				this.root.removeEventListener('mousemove',this.handleMouseMove);
+				this.target.removeEventListener('click', this.placeShip);
+				this.target.removeEventListener('click', this.placeShot);
 				this.targeting.classList.add('hide');
 			} break;
-			case 'subspace': { 
+			case 'subspace': {
+				this.doCleanCellResidue('full');
 				this.target.classList.add('subspace-mode');
 				Object.values(this.cells).forEach(cell => {
 					if (cell.committedCell) cell.target.classList.remove('committedCell')
-				}); this.doCleanCellResidue();
+				}); console.log("Subspace Enabled. Board "+this.boardNumber)
 			} break;
 			case 'dissable-subspace': { 
 				this.target.classList.remove('subspace-mode');
@@ -208,10 +208,11 @@ export default class Board {
 				this.target.classList.toggle('subspace-mode');
 				Object.values(this.cells).forEach(cell => {
 					if (cell.committedCell) cell.target.classList.toggle('committedCell') 
-				}); this.doCleanCellResidue();
+				}); this.doCleanCellResidue('full');
 			} break;
 			default: {return this.status.mode}
         }
+		!ctrl && data && this.mode(data,null,false);
     }
 
 
@@ -224,11 +225,9 @@ export default class Board {
 				this.targeting.classList.remove('hide');
 				this.disc.xpos = e.clientX;
 				this.disc.ypos = e.clientY;
-				this.crosshairV.xpos = e.clientX;
-				this.crosshairH.ypos = e.clientY;
 				this.bracketNode.innerHTML = hoverOver[0].classList[0]; /*`M:${e.clientX},${e.clientY}<br>B:${this.brackets.xpos},${this.brackets.ypos}`;*/
-				this.brackets.xpos = remap(e.clientX, 0, window.innerWidth, this.bracketOffset[0], this.bracketOffset[1]);
-				this.brackets.ypos = remap(e.clientY, -50, window.innerHeight, window.innerHeight*0.2, window.innerHeight*0.85);
+				this.brackets.xpos = remap(e.clientX, this.bracketOffset[0][0], this.bracketOffset[0][1], this.bracketOffset[0][2], this.bracketOffset[0][3]);
+				this.brackets.ypos = remap(e.clientY, this.bracketOffset[1][0], this.bracketOffset[1][1], this.bracketOffset[1][2], this.bracketOffset[1][3]);
 			};
 			if (this.mode()==='place-ships' && this.placeItem.item && hoverOver[0]!==this.pointerCell) this.hoverSillhouette(hoverOver);
 		} else if (!hoverOver.includes(Board)) {
@@ -239,10 +238,11 @@ export default class Board {
 	}
 
 	handleKeyPress(e) {
+		if (this.enableKeyboard) return;
     	e.preventDefault();
     	switch (e.key) {
 			case ' ': {this.follow = !this.follow} break;
-			case 'c': {this.crosshairs.forEach(el=>el.classList.toggle('hide'))} break;
+			case 'c': {[this.disc,this.brackets].forEach(el=>el.classList.toggle('hide'))} break;
 			case 'b': {this.brackets.classList.toggle('hide')} break;
 			case 'd': {this.disc.classList.toggle('hide')} break;
 			case 'r': {this.shipRotation -= 90; this.shipRotation < 0 && (this.shipRotation = 360)} break;
@@ -255,8 +255,12 @@ export default class Board {
 	// FUNC
 	setBracketOffset(direction) {
 		switch (direction) {
-			case 'left': this.bracketOffset = [window.innerWidth*0.28, window.innerWidth*0.86]; break;
-			case 'right': this.bracketOffset = [window.innerWidth*0.28, window.innerWidth*0.86]; break;
+			case 'left': this.bracketOffset = [[-25, window.innerWidth, window.innerWidth/7, window.innerWidth*.7],
+											   [50, window.innerWidth, window.innerWidth/7, window.innerWidth*.7]]; 
+											    break;
+			case 'right': this.bracketOffset = [[-50, window.innerWidth, window.innerWidth/3.7, window.innerWidth*.85],
+												[50, window.innerHeight, window.innerHeight/3.9, window.innerHeight*.83]]; 
+												break;
 		}
 	}
 
@@ -347,46 +351,47 @@ export default class Board {
 	}
 
 	placeShot(e) {
-		if (!e.target.classList.contains('cell')) return;
+		console.log("placeItemtoPlace: ",this.placeItem.item);
+		console.log("placeShot("+this.placeItem?.item.name+" on "+e.target.id+")");
+		if (!e.target.classList.contains('cell')) {console.warn("placeShot() No classListFound");return};
 		if (this.placeItem.item && this.placeItem.item.remaining === this.placeItem.item.max)
 				return this.placeItem.abort(this.placeItem.count);
 
 		if (this.placeItem.item && !e.target.classList.contains('targetedCell')) {
 			this.placeItem.count++;
-			this.signal.resolve(this.placeItem.item);
 			e.target.classList.add('targetedCell');
-			e.target['weapon'] = this.placeItem.item;
-			e.target['originCell'] = this.placeItem.data;
+			this.cells[e.target.id]['weapon'] = this.placeItem.item;
+			this.cells[e.target.id]['originCell'] = this.placeItem.data;
 			this.activeCells.push(this.cells[e.target.id]);
 			console.log("Shot Placed on ", e.target.id);
+			this.signal.resolve(this.placeItem.item);
 			return this.placeItem.next(this.placeItem.item.max, 'maxed-weapon');
 		} else if (e.target.classList.contains('targetedCell')) {
-			const weapon = e.target.weapon;
+			const weapon = this.cells[e.target.id].weapon;
 			this.placeItem.count--;
-			this.signal.reject(weapon, 'removed');
 			e.target.classList.remove('targetedCell');
 			delete e.target.weapon;
-			delete e.target. originCell;
+			delete e.target.originCell;
 			this.activeCells.splice(this.activeCells.indexOf(e.target.id), 1);
 			console.log("Shot Removed from ", e.target.id);
 			this.doCleanCellResidue();
+			console.log("AT placeShot", e.target); console.log(weapon);
+			this.signal.reject(weapon, 'removed');
 		}
 	}
 
 	async handleFire(ships, resolve) {
+		const result = [];
 		const delay = () => new Promise((geaux)=>setTimeout(()=>geaux(),1000));
 		console.log("Active Cells", this.activeCells)
 		for (let cell of this.activeCells) {
-			cell['weapon'] = cell.target.weapon;
-			cell['originCell'] = cell.target.originCell
-			const weapon = cell.weapon;
-			const originCell = cell.originCell;
+			console.log("@handleFire", cell);
 			const originBoardNum = this.boardNumber===1 ? 2 : 1; 
-			console.log("Board calls FIRE from "+originCell.name+" with "+weapon.name+" ("+weapon.remaining+") Reamining shots")
-			console.log(weapon.fire(originBoardNum, originCell, cell, ships));
+			console.log("Board "+this.boardNumber+" calls FIRE from "+cell.originCell.name+" with "+cell.weapon.name+". ("+cell.weapon.remaining+") Reamining shots")
+			result.push(cell.weapon.fire(originBoardNum, cell.originCell, cell, ships));
 			await delay();
 		};
-		resolve();
+		resolve(result);
 	}
 
     update() {
@@ -394,16 +399,16 @@ export default class Board {
         this.brackets.style.top = this.brackets.ypos + 'px';
         this.disc.style.left = this.disc.xpos + 'px';
         this.disc.style.top = this.disc.ypos + 'px';
-        this.crosshairV.style.left = this.crosshairV.xpos + 'px';
-        this.crosshairH.style.top = this.crosshairH.ypos + 'px';
     }
 
 	cleanCellResidue = false;
-	doCleanCellResidue() { this.activeCells.length > 0 && this.activeCells.forEach(c => {
-		c.target.classList.contains(`impededCell`) && c.target.classList.remove(`impededCell`);
-		c.target.classList.contains(`hoverCell`) && c.target.classList.remove(`hoverCell`);
-		c.target.classList.contains(`forbiddenCell`) && c.target.classList.remove(`forbiddenCell`);
+	doCleanCellResidue(option) { let array = option ? Object.values(this.cells) : this.activeCells;
+		for (let c of array)  {
+		if (!c.target.classList) {c.target = this.cells[c.key].target; console.log("REPAIRED CELL:",c)}
+		c.target.classList.contains('impededCell') && c.target.classList.remove('impededCell');
+		c.target.classList.contains('hoverCell') && c.target.classList.remove('hoverCell');
+		c.target.classList.contains('forbiddenCell') && c.target.classList.remove('forbiddenCell');
 		this.cleanCellResidue = false;
-	})
+	}
 	};
 };

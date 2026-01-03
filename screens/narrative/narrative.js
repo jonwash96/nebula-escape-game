@@ -35,10 +35,8 @@ let storyModePlayer, player;
 let response, gotoNext;
 let handleWinCondition = 0;
 
-try {storyModePlayer = JSON.parse(sessionStorage.getItem('storyModePlayer'));
-    player = storyModePlayer.location==='local'
-        ? JSON.parse(localStorage.getItem(storyModePlayer.user))
-        : JSON.parse(sessionStorage.getItem(storyModePlayer.user));
+try {storyModePlayer = sessionStorage.getItem('storyModePlayer')
+    player = JSON.parse(sessionStorage.getItem(storyModePlayer));
     if (player.narrative == null) throw new Error("Error getting player state. Resolving. . .")
     console.log("PlayerState succcess");
     console.log(player.narrative);
@@ -223,15 +221,17 @@ function exitStoryMode() {
     if (!player.narrative.goto==='intro') {
     player.narrative[player.narrative.goto] = 
         {winner:player.winner, option:response.option};
-    }
+    };
+    sessionStorage.setItem(storyModePlayer, JSON.stringify(player));
 
-    storyModePlayer.location==='local'
-        ? localStorage.setItem(player.username, JSON.stringify(player))
-        : sessionStorage.setItem(storyModePlayer.user, JSON.stringify(player));
+    const currentGame = JSON.parse(localStorage.getItem('currentGame'));
+    if (!player.narrative.goto==='intro') {
+        currentGame[storyModePlayer].narrative[player.narrative.goto] = 
+            {winner:player.winner, option:response.option};
+    };
+    localStorage.setItem('currentGame', JSON.stringify(currentGame));
     
     devMode && window.location.reload();
-
-    console.log('exitStoryMode()');
     window.location = "../dashboard/dashboard.html"
 }
 

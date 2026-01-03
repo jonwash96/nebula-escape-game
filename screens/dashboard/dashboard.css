@@ -1,3 +1,4 @@
+:root{overflow:none;}
 body {
     margin:0;
     background: var(--sdblue);
@@ -5,7 +6,6 @@ body {
     width:100vw;
     height:100vh;
     color:white;
-    overflow: none;
 }
 
 .clickable:hover {cursor:pointer;}
@@ -61,7 +61,7 @@ main {
     grid-template-rows: calc((50px - 1em) * 0.8) calc(31% - 50px) 36% 30%;
     gap: 1em 2em;
     grid-template-areas: 
-        ". . header . . "
+        "p1-summary . header . p2-summary "
         "p1-summary . . . p2-summary"
         "p1-ships . . . p2-ships"
         "p1-status . . . p2-status";
@@ -77,6 +77,8 @@ main {
         padding: 2%;
         color:var(--midnight);
     }
+
+    .summary-text-overlay {overflow-y: scroll;}
 
     #p1-summary-text-overlay {grid-area:p1-summary;}
     
@@ -288,7 +290,8 @@ main {
     background-size:cover;
     display: grid;
     width: 100vw;
-    height: 100vh;
+    height: 98vh;
+    margin:0 auto;
     border-radius:0 0 8em 0;
     grid-template-areas: "top" "bottom";
     grid-template-rows: 80% auto;
@@ -382,6 +385,7 @@ dialog {
     width: 480px;
     border: 1px solid var(--gold);
     text-align: center;
+    z-index:1000;
 
     & button {margin-top:2em;}
 }

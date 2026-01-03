@@ -95,8 +95,8 @@ async function testPhaser() {
     const delay=()=>new Promise((resolve)=>setTimeout(()=>resolve(),45))
 
     const input = {
-        originBoard: 1,
-        oppositeBoard: 2,
+        originBoard:null,
+        targetBoard:null,
         originCell: '1821',
         targetCell: '1208',
         testCell: '1109'
@@ -108,8 +108,9 @@ async function testPhaser() {
         document.querySelector('main').addEventListener('click', (e)=>{
             if (!e.target.classList.contains('cell')) return;
             const elements = document.elementsFromPoint(e.clientX,e.clientY)
-            if (count===0 && elements.includes(p1.board)) {input.originBoard = 1; input.oppositeBoard = 2};
-            if (count===0 && elements.includes(p2.board)) {input.originBoard = 2; input.oppositeBoard = 1};
+            // console.log(elements)
+            if (count===0 && elements.includes(p1.board.target)) {input.originBoard = 1; input.targetBoard = 2; console.log("BOARD 1 CLICKED", elements)};
+            if (count===0 && elements.includes(p2.board.target)) {input.originBoard = 2; input.targetBoard = 1;console.log("BOARD 2 CLICKED", elements)};
             switch (count) {
                 case 0: {input.originCell = e.target.id; count++; headerEl.textContent = "set targetCell"}; break;
                 case 1: {input.targetCell = e.target.id; count++; headerEl.textContent = "set testCell"}; break;
@@ -120,38 +121,65 @@ async function testPhaser() {
         });
     });
     // console.log("SENT: ", input.originBoard, input.originCell, input.targetCell, input.testCell)
-    const call = rayIntersect(input.oppositeBoard, input.targetCell, input.originCell, input.testCell);
+    const call = rayIntersect(input.targetBoard, input.targetCell, input.originCell, input.testCell);
     // if (call) {cells[input.testCell].target.classList.add('hitCell',  'phaseCannon')
     // } else cells[input.testCell].target.classList.add('missCell',  'phaseCannon')
     
     let cells =  p1.board.cells; let cell;
     for (cell in cells) {
-        if (rayIntersect(2, input.originCell, input.targetCell, cell)) {
+        if (rayIntersect(input.targetBoard, input.originCell, input.targetCell, cell)) {
             cells[cell].target.classList.add('hitCell',  'phaseCannon');
             await delay();
         }
+        if (rayIntersect(input.targetBoard, input.targetCell, input.originCell, cell)) {
+            cells[cell].target.setAttribute('style','border:2px solid yellow');
+        }
+        if (input.targetBoard===1) {
+            cells[input.testCell].target.classList.remove('hitCell');
+            cells[input.testCell].target.classList.add('impededCell');
+            cells[input.targetCell].target.classList.replace('hitCell', 'targetedCell');
+        } else {cells[input.originCell].target.classList.replace('hitCell', 'missCell');}
     }
-    cells[input.originCell].target.classList.replace('hitCell', 'missCell');
 
     cells =  p2.board.cells;
     for (cell in cells) {
-        if (rayIntersect(1, input.originCell, input.targetCell, cell)) {
+        if (rayIntersect(input.originBoard, input.originCell, input.targetCell, cell)) {
             cells[cell].target.classList.add('hitCell',  'phaseCannon');
             await delay();
         }
+        if (rayIntersect(input.origin, input.targetCell, input.originCell, cell)) {
+            cells[cell].target.setAttribute('style','border:2px solid yellow');
+        }
+        if (input.targetBoard===2) {
+            cells[input.testCell].target.classList.remove('hitCell');
+            cells[input.testCell].target.classList.add('impededCell');
+            cells[input.targetCell].target.classList.replace('hitCell', 'targetedCell');
+        } else {cells[input.originCell].target.classList.replace('hitCell', 'missCell');}
     }
-
-    cells[input.testCell].target.classList.remove('hitCell');
-    cells[input.testCell].target.classList.add('impededCell');
-    cells[input.targetCell].target.classList.replace('hitCell', 'targetedCell');
 
     headerEl.textContent = call;
-    cells =  Object.values(p2.ships).map(ship=>ship.location[1]).flat();
-    for (cell of cells) {
-        if (rayIntersect(1, input.originCell, input.targetCell, cell.key)) cell.target.classList.replace('hitCell',  'impededCell')
-        // if (rayIntersect(input.oppositeBoard, input.targetCell, input.originCell, cell)) cells[cell].target.classList.add('hitCell',  'phaseCannon')
+
+    if (input.targetBoard===1) {
+        cells =  Object.values(p1.ships).map(ship=>ship.location[1]).flat();
+        for (cell of cells) { 
+            if (rayIntersect(input.targetBpard, input.originCell, input.targetCell, cell.key)) {
+                cell.target.classList.replace('hitCell',  'impededCell')
+            }
+        }
+    } else {
+        cells =  Object.values(p2.ships).map(ship=>ship.location[1]).flat();
+        for (cell of cells) {
+            if (rayIntersect(input.targetBpard, input.originCell, input.targetCell, cell.key)) {
+                cell.target.classList.replace('hitCell',  'impededCell')
+            }
+        }
+        
     }
 }
+
+
+
+
 
 function rayIntersectsCellB(origin, dir, cellMin, cellMax) {
 // if (origin.col===cellMin.col) return true;
