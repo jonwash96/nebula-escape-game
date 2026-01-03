@@ -1,5 +1,5 @@
-import Player from "../../game/Player.js";
-import BOT from "../../../engine/BOT.js";
+import Player from "./Player.js";
+import BOT from "./BOT.js";
 import { nav } from "../../nav_dev.js";nav();
 
 // BUS

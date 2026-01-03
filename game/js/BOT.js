@@ -1,5 +1,6 @@
-import Ships from "../../components/Ships/ships.js";
-import Board from "../../components/board/Board.js";
+import Ships from "./Ships.js";
+import ships from "./ships_store.js";
+import Board from "./Board.js";
 
 export default class BOT {
     constructor(botConfig, boardEl, options) {

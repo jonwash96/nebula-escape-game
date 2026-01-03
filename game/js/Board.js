@@ -1,4 +1,4 @@
-import { remap } from "../../engine/utils/math.js";
+import { remap } from "./math.js";
 
 export default class Board {
 	static boardNumber = 0;

@@ -1,7 +1,9 @@
 *.ai
 
-assets/story/text.html
-assets/story/createStory.js
+assets/images/Screenshot_20251216_191319_Samsung Notes.jpg
+assets/svg/Project 9 (20251218102259).svg
+assets/svg/Project 9_1 (20251223125941).svg
+assets/svg/db-bracket.html
 
 */dev
 *_dev*
@@ -9,3 +11,6 @@ assets/story/createStory.js
 log.txt
 
 projectManagement
+components
+engine
+screens

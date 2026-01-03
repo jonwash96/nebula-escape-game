@@ -1,5 +1,5 @@
 import { ships } from "./ships_store.js"
-import { rayIntersect,cellDistance,parse } from "../../engine/utils/math.js";
+import { rayIntersect,cellDistance,parse } from "./math.js";
 
 export default class Ships {
     ships = {};
