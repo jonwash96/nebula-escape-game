@@ -22,7 +22,7 @@ try {storyModePlayer = sessionStorage.getItem('storyModePlayer')
     if (player.narrative == null) throw new Error("Error getting player state. Resolving. . .")
     console.log("PlayerState succcess");
     console.log(player.narrative);
-} 
+}
 catch (err) {
     console.warn(err)
     if (err.message.includes('storyModePlayer is not defined')) {
@@ -34,9 +34,7 @@ catch (err) {
     }
 }}
 
-render(player.narrative.goto, gameState.state.narrative.winner); 
-
-// TODO: Put the lore on the title screen.
+render(player.narrative.goto, gameState.state.narrative.winner);
 
 function render(goto, winner) {
     let useTitle, useNarrarive, useOutcome, usePrompts;
@@ -52,11 +50,11 @@ function render(goto, winner) {
             setTimeout(()=>continueBtn.classList.replace('sdblue', 'red'), 30000);
         } break;
         case 'part1': {
-            winner = 'user'; 
+            winner = 'user';
             sessionStorage.setItem('gameMode', 'begin-game')
         } break;
         case 'part2': break;
-        case 'part3': { 
+        case 'part3': {
             if (gameState.state.narrative.winner === 'user') {
                 if (player.narrative.part2.winner === 'user' &&
                   player.narrative.part2.option ==="D") {
@@ -65,18 +63,18 @@ function render(goto, winner) {
                 } else {
                     useNarrarive = story[goto][winner].narrative[0]
                 };
-            } 
+            }
             else if (gameState.state.narrative.winner === 'opp') {
                 if (player.narrative.part2.winner === 'user') {
                     if (player.narrative.part2.option ==="D") {
-                        useNarrarive = story[goto][winner].narrative[1] 
+                        useNarrarive = story[goto][winner].narrative[1]
                     } else {
                         useNarrarive = story[goto][winner].narrative[0]
-                    }; 
+                    };
                 } else if (player.narrative.part2.winner === 'opp') {
                     useNarrarive = story[goto][winner].narrative[2]
-                }; 
-            }; 
+                };
+            };
         } break;
         case 'part4': break;
         case 'part5': break;
@@ -93,7 +91,6 @@ function render(goto, winner) {
 
     titleEl.innerHTML = useTitle || story[goto][winner].title;
     narrativeEl.innerHTML = useNarrarive || story[goto][winner].narrative.randomIDX();
-    // imageEl.src = story[goto][winner].image || '';
 
     goto!=='intro' &&
     (usePrompts || story[goto][winner].prompts).forEach(prompt => {
@@ -140,7 +137,7 @@ function handleResponse(e,prompt,useOutcome) {
     };
 
     if (handleWinCondition===2) {return handleTextResponse(e,prompt)};
-    
+
     continueBtn.classList.replace('sdblue', 'red');
     continueBtn.classList.add('active');
     const curry = (e) => handleOutcomes(e,useOutcome);
@@ -190,7 +187,7 @@ function tallyPath(option) {
             }
         } break;
         default: {
-            if (player.narrative.path.courage > player.narrative.path.duty) 
+            if (player.narrative.path.courage > player.narrative.path.duty)
                 return 'courage';
             else return 'duty';
         }
@@ -213,18 +210,18 @@ function exitStoryMode() {
     player.narrative.path[tallyPath()]+1;
     player.update = Date.now();
     if (!player.narrative.goto==='intro') {
-    player.narrative[player.narrative.goto] = 
+    player.narrative[player.narrative.goto] =
         {winner:gameState.state.narrative.winner, option:response.option};
     };
     sessionStorage.setItem(storyModePlayer, JSON.stringify(player));
 
     const currentGame = JSON.parse(localStorage.getItem('currentGame'));
     if (!player.narrative.goto==='intro') {
-        currentGame[storyModePlayer].narrative[player.narrative.goto] = 
+        currentGame[storyModePlayer].narrative[player.narrative.goto] =
             {winner:gameState.state.narrative.winner, option:response.option};
     };
     localStorage.setItem('currentGame', JSON.stringify(currentGame));
-    
+
     reload
         ? window.location.reload()
         : window.location = "./dashboard.html"

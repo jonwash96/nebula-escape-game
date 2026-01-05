@@ -44,7 +44,6 @@ main {
         display: flex;
         flex-direction: column;
         justify-self: space-between;
-        /* transform: translateX(-50%); */
         gap:1em;
 
         & > div {
@@ -71,8 +70,8 @@ main {
             height:100%;
             overflow-y:none;
             display: grid;
-            grid-template: 
-                ". text image" 1fr 
+            grid-template:
+                ". text image" 1fr
                 ". text prompts" 1fr / 10% 1.25fr 1fr;
             gap: 1em;
             padding:1em;
@@ -119,7 +118,7 @@ ul {padding-inline-start:0;padding:12px}
 li {
     color:black;
     list-style:none;
-    
+
     & label {
         display:grid;
         grid-template:"pill prompt" auto / auto 1fr;
@@ -140,7 +139,7 @@ li {
         text-align: center;
         margin:6px; margin-right:0;
     }
-    
+
     & .option-text {
         grid-area:prompt;
         background-color: var(--dustycyan);

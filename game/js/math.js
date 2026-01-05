@@ -39,52 +39,47 @@ if (origin.col===cellMin.col) return true;
 
 // HANDMADE PARSER FOR AI BUILT RAY-INTERSECT FUNCTION
 function rayIntersect(targetBoardNum, origin, target, testPoint) {
-  const parse = (strNum) => Object({ 
-    row: Number(strNum.slice(0,2)), 
+  const parse = (strNum) => Object({
+    row: Number(strNum.slice(0,2)),
     col: Number(strNum.slice(-2)) });
 
   const p1ToGlobal = (obj) => Object({ row:26-obj.row, col:obj.col });
   const p2ToGlobal = (obj) => Object({ row:26+obj.row, col:26-obj.col });
 
-  // console.log("LOCAL: ", parse(origin), parse(target))
-  // console.log("GLOBAL", p1ToGlobal(parse(origin)), p2ToGlobal(parse(target)))
-
   const len = (obj) => Math.hypot(obj.row, obj.col);
   const norm = (obj) => Object({ row:obj.row / len(obj), col:obj.col / len(obj) });
 
   const rayDir = () => {
-    return targetBoardNum===1 && norm( Object({ 
-      row:(p2ToGlobal(parse(target)).row - p1ToGlobal(parse(origin)).row), 
+    return targetBoardNum===1 && norm( Object({
+      row:(p2ToGlobal(parse(target)).row - p1ToGlobal(parse(origin)).row),
       col:(p2ToGlobal(parse(target)).col - p1ToGlobal(parse(origin)).col) }) ) ||
-    targetBoardNum===2 && norm( Object({ 
-      row:-(p2ToGlobal(parse(target)).row - (p1ToGlobal(parse(origin)).row)), 
+    targetBoardNum===2 && norm( Object({
+      row:-(p2ToGlobal(parse(target)).row - (p1ToGlobal(parse(origin)).row)),
       col:-((p2ToGlobal(parse(target)).col) - (p1ToGlobal(parse(origin)).col)) }) )
   }
 
   const cellMin = () => {
-    return targetBoardNum===1 && Object({ 
-      row:p2ToGlobal(parse(testPoint)).row, 
+    return targetBoardNum===1 && Object({
+      row:p2ToGlobal(parse(testPoint)).row,
       col:p2ToGlobal(parse(testPoint)).col }) ||
-    targetBoardNum===2 && Object({ 
-      row:p2ToGlobal(parse(testPoint)).row, 
+    targetBoardNum===2 && Object({
+      row:p2ToGlobal(parse(testPoint)).row,
       col:p2ToGlobal(parse(testPoint)).col })
   }
 
   const cellMax = () => {
-    return targetBoardNum===1 && Object({ 
-      row:p2ToGlobal(parse(testPoint)).row + 1, 
+    return targetBoardNum===1 && Object({
+      row:p2ToGlobal(parse(testPoint)).row + 1,
       col:p2ToGlobal(parse(testPoint)).col + 1 }) ||
-    targetBoardNum===2 && Object({ 
-      row:p2ToGlobal(parse(testPoint)).row + 1, 
+    targetBoardNum===2 && Object({
+      row:p2ToGlobal(parse(testPoint)).row + 1,
       col:p2ToGlobal(parse(testPoint)).col + 1 })
   }
 
-  return targetBoardNum===1 
-    && rayIntersectsCellB( p1ToGlobal(parse(origin)), rayDir(), cellMin(), cellMax() ) || 
-    targetBoardNum===2 
+  return targetBoardNum===1
+    && rayIntersectsCellB( p1ToGlobal(parse(origin)), rayDir(), cellMin(), cellMax() ) ||
+    targetBoardNum===2
       && rayIntersectsCellB( p2ToGlobal(parse(origin)), rayDir(), cellMin(), cellMax() )
 }
 
 export { parallax, remap, rayIntersect, cellDistance, parse };
-
-

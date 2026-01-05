@@ -15,19 +15,17 @@ body {
 main {
     pointer-events: all;
     position: absolute;
-    width:100vw; 
+    width:100vw;
     height:100%;
     z-index: 10;
     display: grid;
-    grid-template: 
+    grid-template:
         ". . . ." 10%
         ". p1 p2 . " 60%
         ". . . . " 30% / 1fr 2fr 2fr 1fr;
-    /* border: 1px solid magenta; */
 
     #p2-board, #p1-board {
         position: relative;
-        /* border:1px solid orange; */
     }
     #p1-board {grid-area:p1;}
     #p2-board {grid-area:p2;}
@@ -39,7 +37,7 @@ main {
 @media screen and (max-width: 1190px) {
     .active-board {display:grid;}
     main {
-        grid-template: 
+        grid-template:
         ". . ." 9%
         ". p2 . " 60%
         ". . . " 30% / 1fr 2fr 1fr;
@@ -55,12 +53,11 @@ main {
     z-index: 2;
     margin-top:15px;
     padding:0 1%;
-    /* border: 1px solid magenta; */
     display: grid block;
     grid-template-columns: 15% 13% auto 13% 15%;
     grid-template-rows: calc((50px - 1em) * 0.8) calc(31% - 50px) 36% 30%;
     gap: 1em 2em;
-    grid-template-areas: 
+    grid-template-areas:
         "p1-summary . header . p2-summary "
         "p1-summary . . . p2-summary"
         "p1-ships . . . p2-ships"
@@ -92,7 +89,7 @@ main {
     justify-content: center;
     align-items: flex-end;
     pointer-events: none;
-    
+
     & h4 {margin:6px;}
     & div {
         background-color: var(--gold);
@@ -145,23 +142,21 @@ main {
 .ships-text-overlay {
     height:96%;
     & div {
-        /* border:1px solid yellow; */
         position:relative;
         padding: 1%;
         color:var(--midnight);
     }
 }
-    
+
 #p1-ships-text-overlay {
     grid-area:p1-ships;
     text-align: left;
-    
+
     & .ships {
         display: grid;
         grid-template: 25% 23% 22% 15% 15% / auto;
         height: 98%;
-        /* border: 1px solid violet; */
-        
+
         & .placed-ship svg {opacity:0.5;}
         & svg {
             fill: var(--sdblue);
@@ -169,7 +164,7 @@ main {
             pointer-events: none;
         }
     }
-    
+
     & .ships.enemy {
         & #borgCube-svg {height:100%;}
         & #capitalShip-svg {height:100%;}
@@ -177,7 +172,7 @@ main {
         & #mars-shuttle-svg {height:95%;}
         & #snakehead-svg {height:80%;}
     }
-    
+
     & .ships.starfleet {
         & .ship svg {rotate: 180deg;}
         & #enterprise-svg {height:100%;}
@@ -186,7 +181,7 @@ main {
         & #lasirena-svg {height:100%;}
         & #shuttle-svg {height:70%;}
     }
-    
+
     & #p1-ships-btn {transform:translate(5.5vw, -130%);}
 }
 
@@ -194,20 +189,19 @@ main {
 #p2-ships-text-overlay {
     grid-area:p2-ships;
     text-align: right;
-    
+
     & .ships {
         display: grid;
         grid-template: 25% 23% 22% 15% 15% / auto;
         height: 98%;
-        /* border: 1px solid violet; */
-        
+
         & svg.placed-ship {opacity:0.5;}
         & svg {
             fill:var(--sdblue);
-            height:100%; 
+            height:100%;
             pointer-events: none;
         }
-        
+
         &.starfleet {
             & #enterprise-svg {height:100%;}
             & #titan-svg {height:100%;}
@@ -215,13 +209,13 @@ main {
             & #lasirena-svg {height:100%;}
             & #shuttle-svg {height:70%;}
         }
-        
+
         &.enemy {
             & #borgCube svg {rotate: 0deg;}
             & .ship svg {rotate: 180deg;}
         }
     }
-    
+
     & #p2-ships-btn {transform:translate(-130px, -130%)}
 }
 
@@ -241,8 +235,7 @@ main {
     grid-template: 15% 17% 16% 16% 16% 16% / auto;
     height: 95%;
     padding:1% 3%;
-    /* border: 1px solid violet; */
-    
+
     & svg {
         fill: var(--sdblue);
         pointer-events: none;
@@ -251,13 +244,11 @@ main {
     & h4 {
         margin:0;
         line-height:1em;
-        /* border:1px solid green; */
     }
 
     & .targeting-group {
         display:flex;
         gap:2em;
-        /* border:1px solid white; */
 
         & .weapons {
             margin: 0 24px;
@@ -269,7 +260,7 @@ main {
         }
         & div svg {height:70%;}
     }
-    
+
 
     & .weapon-symbol svg {height:100%;fill:var(--sdblue);}
     & .weapon-symbol:hover svg {cursor:pointer;fill:var(--dgold);}
@@ -314,7 +305,6 @@ main {
 }
 
 .targeting-panel.starfleet {
-    /* & div {border:1px solid blue;height:100%;} */
     & .ship svg {rotate: 180deg;}
     & #enterprise-svg {height:100%;}
     & #titan-svg {height:100%;}
@@ -346,7 +336,7 @@ main {
     grid-template-columns: 15% 15% auto 15% 15%;
     grid-template-rows: 30% auto 30%;
     gap: 1em;
-    grid-template-areas: 
+    grid-template-areas:
         "p1-summary p1-summary . p2-summary p2-summary"
         "p1-ships board board board p2-ships"
         "p1-status p1-status . p2-status p2-status";
@@ -373,7 +363,6 @@ main {
     padding:0.5% 1%;
     grid-template:"left center right" 17vh / 1.75fr 1.25fr 1.75fr;
 
-    /* & div {border:1px solid green;} */
 
     .db-controls {
         display:flex;
@@ -382,31 +371,23 @@ main {
         position:relative;
         gap: 1em 3em;
     }
-    
+
     #attack-controls {
         grid-area: left;
         justify-content: flex-start;
     }
-    
+
     #game-controls {
         grid-area: right;
         justify-content: flex-end;
     }
-    
+
     & .center {
         grid-area:center;
         display:grid;
         height:100%;
         gap: 1em;
-        /* grid-template: 
-            "l1 m r1" 33.33%
-            "l2 m r2" 33.33%
-            "l3 bm2 r3" 33.33% / auto auto auto; */
         grid-template: 33.33% / 1fr 1fr;
-    
-        /* & div:nth-child(1) {grid-area:l1;}
-        & div:nth-child(2) {grid-area:l2;}
-        & div:nth-child(3) {grid-area:l3;} */
 
         & .status-list-item {
             display:grid;
@@ -431,7 +412,7 @@ main {
             & .opt {font-size: 2em;padding-top:0.4em;grid-area:opt;}
         }
     }
-    
+
 }
 
 #pause-menu ul {

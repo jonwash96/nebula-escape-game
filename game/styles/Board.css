@@ -5,7 +5,6 @@
 .hide {display:none;}
 
 .Board {
-    /* margin: .5em; */
     margin:0 auto!important;
     position: relative;
     max-width: 100%;
@@ -13,19 +12,16 @@
     aspect-ratio: 1/1;
     display: grid;
     grid-template:
-        ". t-rows ." var(--label-extents) 
+        ". t-rows ." var(--label-extents)
         "m-rows-l m-board m-rows-r" 100%
         ". b-rows ." var(--label-extents) / var(--label-extents) auto var(--label-extents);
     color: white;
-    /* border:1px solid green; */
     z-index:0;
-    /* opacity:0; */
 }
 
 .Board-grid-container {
     position: relative;
-    /* aspect-ratio: 1/1; */
-    height: 100%; 
+    height: 100%;
     grid-area: m-board;
     border: 4px solid var(--cyan);
     border-radius: 6px;
@@ -49,7 +45,7 @@
     z-index:0;
     position: relative;
     flex-grow: 1;
-    
+
     & div {
         line-height: 0;
         margin: 0;
@@ -60,10 +56,8 @@
         width: calc(100% /26);
         height:100%;
         font-size: 3px;
-        /* aspect-ratio: 1/1; */
         text-align: center;
         vertical-align: middle;
-        /* transition:background-color 200ms; */
     }
 
     &:hover {cursor: cell;}
@@ -78,7 +72,7 @@
 .committedCell {background-color: var(--blue);transition:background-color 400ms;}
 .committedCell:hover {background-color: var(--lcyan) !important;}
 .impededCell {background-color: var(--red);}
-.forbiddenCell {background-color: var(--red);} 
+.forbiddenCell {background-color: var(--red);}
 .targetedCell {
     border: 1px solid var(--lred);
     background-color: var(--lred);
@@ -90,13 +84,13 @@
 .missCell {background-color: #fffb;transition:background-color 800ms;}
 .hitCell::before, .missCell::before {
     font-size:7pt;
-    font-weight:600; 
-    color:black; 
-    top:50%; 
-    height:1em; 
-    aspect-ratio:1/1; 
-    position:relative; 
-    z-index:2; 
+    font-weight:600;
+    color:black;
+    top:50%;
+    height:1em;
+    aspect-ratio:1/1;
+    position:relative;
+    z-index:2;
 }
 .hitCell.photonTorpedo::before {content:"PT";}
 .missCell.photonTorpedo::before {content:"PT";}
@@ -111,9 +105,7 @@
 
     & div {
         display: inline-block;
-        /* border:1px solid black; */
         width: calc(100% /26);
-        /* aspect-ratio: 1/1; */
         text-align: center;
     }
 }
@@ -135,11 +127,8 @@
 
     & div {
         display: block;
-        /* border:1px solid black; */
         width: 100%;
-        /* aspect-ratio: 1/1; */
         text-align: center;
-        /* vertical-align: middle; */
     }
 }
 
@@ -147,16 +136,15 @@
     position: absolute;
     transform: translate(-50%, -65%);
     pointer-events: none;
-    /* border: 1px solid red; */
     z-index:1;
     opacity: 0.5;
-    
+
     & svg {
         fill: var(--cyan);
         aspect-ratio: 1/1;
         width: 400px;
     }
-    
+
     & .bracket-node {
         position:absolute;
         width: 100px;
