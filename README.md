@@ -1,5 +1,6 @@
 # Nebula Escape Game
 ***A Star Trek themed Battleships computer game written in vanilla Javascript***
+[🔗Play The Game](https://jonwash96.github.io/nebula-escape-game/)
 
 ![Nebula Escape Cover Image](/assets/images/title-screen.png)
 
