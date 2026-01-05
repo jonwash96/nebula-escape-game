@@ -15,7 +15,7 @@ export default class Ships {
                     ship['location'] = existing;
                     ship.location[1] = Ships.rebuildCellArray(existing[1], userConfig.board.cells);
                 }
-                if (userConfig.ships.hits) {
+                if (userConfig.ships[templateShip.name].hits) {
                     const existing =  userConfig.ships[templateShip.name].hits;
                     ship['hits'] = Ships.rebuildCellArray(existing, userConfig.board.cells);
                 } else {ship['hits'] = []};
@@ -50,7 +50,7 @@ export default class Ships {
             fire(originBoardNum, originCell, targetCell, opponentShips) {
                 const unhitCells = Object.values(opponentShips).map(ship=>ship.location[1].filter(cell=>!cell.hit));
                 if (targetCell.committedCell) {
-                    return Ships.weapons.handleHit(targetCell, {originCell, type:'photonTorpedo'})
+                    return Ships.weapons.handleHit(targetCell, {originCell, type:'photonTorpedo'}, opponentShips)
                 } else {return Ships.weapons.handleMiss(targetCell, {originCell, type:'photonTorpedo'})}
             }
         },
@@ -84,14 +84,20 @@ export default class Ships {
                     return best;
                 }, null)?.cell;
     
-                return Ships.weapons.handleHit(closest, {originCell, type: 'phaseCannon'});
+                return Ships.weapons.handleHit(closest, {originCell, type: 'phaseCannon'}, opponentShips);
             }
         },
-        handleHit(targetCell, obj) { // obj = {originCell, type:'photonTorpedo'}
+        handleHit(targetCell, obj, ships) { // obj = {originCell, type:'photonTorpedo'}
             targetCell['hit'] = obj;
             targetCell.target.classList.remove('targetedCell');
             targetCell.target.classList.add('hitCell');
             targetCell.target.classList.add(obj.type);
+            for (let ship in ships) {
+                ships[ship].location[1].forEach(cell => {
+                    if (cell.key===targetCell.key) {
+                        ships[ship].hits.push(targetCell) };
+                });
+            }
             console.log(`Target Hit! (${targetCell.target.classList[0]})`);
             return ['Hit', targetCell];
         },

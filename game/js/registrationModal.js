@@ -184,7 +184,7 @@ function userSetupManager(e) {
             })
         }
         sessionStorage.setItem('gameMode', 'init');
-        window.location = "./screens/dashboard/dashboard.html"
+        window.location = "./game/dashboard.html"
     };
     playerNum++;
 } 

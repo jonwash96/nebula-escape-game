@@ -11,7 +11,7 @@ class Signal {
         this.active = false;
     }
     async send() { const self = this; this.active = true; let count = 0;
-        while (this.active) { count++; count>=30 && (this.active = false);
+        while (this.active) { count++; count>=20 && (this.active = false);
             await new Promise((resolve,reject) => { console.log("Send Signal. . .")
                 const onResolve = (...args) => {console.log("@Signal:Resolved");resolve(self.resolver(...args))};
                 const onReject = (...args) => {console.log("@Signal:Rejected");reject(self.rejector(...args))};
@@ -28,6 +28,8 @@ let state = {
     mode:null,
     gameKey:null,
     narrative: {
+        winner:null,
+        storyModePlayer:'user||opp',
         goto:'firstBlood',
         shipsPlaced:false, 
         firstBlood:false, 
@@ -40,26 +42,40 @@ let state = {
         player1: [0,0], /*[turns taken, turns taken since last hit]*/
         player2: [0,0],
     },
-    winner:null,
     activeBoard:null,
     turn:null,
     opponent:null,
     update:null,
 };
 
+let settings = {
+    switchUserModal:false,
+    switchUserModalValue: () => {return settings.switchUserModal ? 3 : 1},
+    switchUserPw:true,
+    dimBrackets:false,
+    recoveryMode:true,
+    devToggleOppSubspace:true,
+};
+
+const tutorial = {
+    howToPlace:[false,"To place a weapon, pick one from your ships panel and then place it on the board. You must place 5 shots per turn, and some ships run out of ammo before 5."],
+}
+
 
 // DOM
 const headerEl = document.getElementById('game-status-header');
 
-
-
 const p1 = {
+    which:'player1',
     status:null,
     config:null,
     boardEl: document.getElementById('p1-board'),
     infoPanel: {
         target: document.getElementById('p1-summary-text-overlay'),
-        data: []
+        list: document.querySelector('#p1-summary-text-overlay ul'),
+        data: [],
+        add(node) {typeof node==='string' && this.data.push(node);
+                   this.list.appendChild(actions.createInfoPanelNode(node)) },
     },
     targetingSystemEl: document.getElementById('p1-load-targeting-system'),
     shipsPanel: document.getElementById('p1-ships-text-overlay'),
@@ -83,12 +99,16 @@ const p1 = {
 }
 
 const p2 = {
+    which:'player2',
     status:null,
     config:null,
     boardEl: document.getElementById('p2-board'),
     infoPanel: {
         target: document.getElementById('p2-summary-text-overlay'),
-        data: []
+        list: document.querySelector('#p2-summary-text-overlay ul'),
+        data: [],
+        add(node) {typeof node==='string' && this.data.push(node);
+                   this.list.appendChild(actions.createInfoPanelNode(node)) },
     },
     targetingSystemEl: document.getElementById('p2-load-targeting-system'),
     shipsPanel: document.getElementById('p2-ships-text-overlay'),
@@ -120,6 +140,10 @@ const buttons = {
     pause: document.getElementById('btn-pause'),
     orient: document.getElementById('btn-orient'),
     switchUser: document.getElementById('btn-switch-user'),
+    recoveryMode: {
+        target: document.getElementById('dev_recover'),
+        function: () => mode('recovery')
+    },
     toggleSubspace: {
         target: document.getElementById('toggle-subspace'),
         text(msg) { msg 
@@ -153,9 +177,40 @@ const buttons = {
 const modals = {
     info: {
         target: document.getElementById('db-info-modal'),
-        listen() {this.target.children[3].children[0].addEventListener('click', ()=>this.action())},
-        show() {this.target.showModal()},
-        action() {this.target.close()}
+        title: document.querySelector('#db-info-modal h1'),
+        subhead: document.querySelector('#db-info-modal h2'),
+        l3: document.querySelector('#db-info-modal h5'),
+        text: document.querySelector('#db-info-modal p'),
+        element: document.querySelector('#db-info-modal div:nth-of-type(1)'),
+        button: document.querySelector('#db-info-modal .btn-block button:nth-child(1)'),
+        newGameBtn: document.querySelector('#db-info-modal .btn-block button:nth-child(2)'),
+        listen() { this.button.addEventListener('click', this.function);
+                   this.newGameBtn.addEventListener('click', this.beginNewGame) },
+        beginNewGame() {saveState('full'); window.location = '../index.html'},
+        function() {modals.info.target.close()},
+        show(config,newGame) {
+            Array.from(this.target.children).forEach(child => {
+                child.classList.remove('hide') 
+            });
+            this.title.innerHTML = config.title || 'null';
+            this.subhead.innerHTML = config.subhead || 'null';
+            this.l3.innerHTML = config.l3 || 'null';
+            this.text.innerHTML = config.text || 'null';
+            config.element && this.element.appendChild(config.element);
+            this.button.textContent = config.button || 'Ok';
+            newGame && this.newGameBtn.classList.remove('hide');
+            if (typeof config.action==='function') {
+                const action = () => {
+                    config.action();
+                    this.button.removeEventListener('click', this.curry) 
+                };
+                    this.button.addEventListener('click', action);
+            }
+            this.element.textContent==='dom node(s)' && this.element.classList.add('hide');
+            Array.from(this.target.children).forEach(child => {
+                child.textContent==='null' && child.classList.add('hide') });
+            this.target.showModal();
+        },
     },
     switchUser: {
         target: document.getElementById('db-switch-user-modal'),
@@ -195,7 +250,8 @@ const modals = {
                 }
             } else {
                 this.count++;
-                this.count===3 && (exit = true);
+                const val = settings.switchUserModal ? 3 : 1;
+                this.count===val && (exit = true);
             };
 
             if (exit) { this.count = 0;
@@ -252,7 +308,130 @@ const modals = {
             this.target.showModal();
         },
     },
+    pause: {
+        target: document.getElementById('pause-menu'),
+        settings: document.querySelectorAll('#pause-menu ul li input'),
+        quitGameBtn: document.querySelector('#pause-menu .btn-block button:nth-child(1)'),
+        playBtn: document.querySelector('#pause-menu .btn-block button:nth-child(2)'),
+        count: 0,
+        listen() {buttons.pause.addEventListener('click', modals.pause.show.bind(modals.pause))},
+        quitGame() { this.count++;
+            count===0 && (this.quitGameBtn.textContent = "Quit Game");
+            count===1 && (this.quitGameBtn.textContent = "Press 2X more");
+            count===2 && (this.quitGameBtn.textContent = "Press 1X more");
+            count===3 && (window.location = "../index.html");
+        },
+        playGame(option) { this.count = 0;
+            document.querySelectorAll('#pause-menu ul li input').forEach(item=>{
+                switch (item.id) {
+                    case 'setting-switch-user-modal': {settings.switchUserModal = item.checked} break;
+                    case 'setting-switch-user-password': {settings.switchUserPw = item.checked} break;
+                    case 'setting-dim-brackets': {settings.dimBrackets = item.checked; 
+                        Array.from(document.querySelectorAll('.db-bracket')).forEach(bracket => {
+                            if (item.checked) {bracket.classList.add('dim')
+                            } else {bracket.classList.remove('dim')};
+                        })
+                    } break;
+                    case 'setting-recovery-mode': {settings.recoveryMode = item.checked;
+                        if (item.checked) {
+                            buttons.recoveryMode.target.textContent = "dev_recoveryMode";
+                            buttons.recoveryMode.target.addEventListener('click', buttons.recoveryMode.function);
+                            buttons.recoveryMode.target.classList.add('active');
+                        } else {
+                            buttons.recoveryMode.target.textContent = "";
+                            buttons.recoveryMode.target.removeEventListener('click', buttons.recoveryMode.function);
+                            buttons.recoveryMode.target.classList.remove('active');
+                        }
+                    } break;
+                    case 'setting-opp-subspace': {settings.devToggleOppSubspace = item.checked;
+                        if (item.checked) {
+                            buttons.devToggleOppSubspace.target.textContent = "dev_opponent_Subspace";
+                            buttons.devToggleOppSubspace.target.addEventListener('click', buttons.devToggleOppSubspace.action);
+                            buttons.devToggleOppSubspace.target.classList.add('active');
+                        } else {
+                            buttons.devToggleOppSubspace.target.textContent = "";
+                            buttons.devToggleOppSubspace.target.removeEventListener('click', buttons.devToggleOppSubspace.action);
+                            buttons.devToggleOppSubspace.target.classList.remove('active');
+                        }
 
+                    } break;
+                }
+                option ?? saveState('full');
+                this.target.close();
+            })
+        },
+        show() {
+            mode('pause');
+            this.target.showModal();
+            this.quitGameBtn.addEventListener('click',modals.pause.quitGame.bind(modals.pause));
+            this.playBtn.addEventListener('click',modals.pause.playGame.bind(modals.pause));
+        }
+    }
+}
+
+const narrativeStatus = {
+    target: document.querySelector('#db-controls-grid .center'),
+    parts: () => Object.entries(state.narrative.storyModePlayer.player.narrative).filter(arr=>arr[0].match(/part\d/)),
+    render() {
+
+        const color = (data) => {
+            console.log("@narrativeStatus data", data);
+            console.log("@narrativeStatus winner", data.winner, data.winner==='user');
+            console.log("@narrativeStatus path", data.response.path, data.response.path==='duty');
+            let color;
+            switch (data.winner) {
+                case 'user': {color = data.response.path==='courage' ? 'red' : 'blue'} break;
+                case 'opp': {color = data.response.path==='duty' ? 'steelblue' : 'cyan'} break;
+                default: {color = 'sdblue'}
+            }
+            return color;
+        }
+        this.parts().forEach(([part,data])=> {
+            const item = document.createElement('div');
+                item.classList.add('status-list-item');
+                item.id = part;
+                item.title = data.response.prompt.replace(/\&.+;/, "'");
+            const pill = document.createElement('div');
+                pill.classList.add('pill', color(data));
+                pill.textContent = part.slice(-1);
+                item.appendChild(pill);
+            const title = document.createElement('span');
+                title.classList.add('title');
+                title.textContent = data.title;
+                item.appendChild(title);
+            const response = document.createElement('span');
+                response.classList.add('response');
+                response.innerHTML = data.response.prompt.length>60 
+                    ? data.response.prompt.slice(0,60)+"..."
+                    : data.response.prompt;
+                item.appendChild(response)
+            const opt = document.createElement('span');
+                opt.classList.add('opt');
+                opt.textContent = data.response.option;
+                item.appendChild(opt);
+            this.target.appendChild(item);
+        })
+    }
+}
+
+const notify = {
+    root: document.getElementById('notification'),
+    target: document.querySelector('#notification div'),
+    text: document.querySelector('#notification span'),
+    gameLogo: document.getElementById('db-logotype'),
+    async show(content,resolve) {
+        this.text.innerHTML = content;
+        this.gameLogo.classList.add('hide');
+        this.target.classList.remove('hide')
+        this.target.classList.add('show-notify');
+        await delay(3000);
+        resolve && resolve();
+        this.target.classList.add('hide-notify');
+        await delay(3000);
+        this.target.classList.remove('show-notify','hide-notify')
+        this.target.classList.add('hide')
+        this.gameLogo.classList.remove('hide');
+    }
 }
 
 const actions = {
@@ -265,12 +444,15 @@ const actions = {
         px.targetingPanel.target.classList.add('hide');
     },
     getPlayerInfoPanels: () => Object({p1:p1.infoPanel.data, p2:p2.infoPanel.data}),
-    refreshInfoPanels() {[p1,p2].forEach(px=>px.infoPanel.data.forEach(textNode => {
+    createInfoPanelNode(node)  {
         const info = document.createElement('li');
-            info.classList.add('info-list-node');
-            info.innerHTML = textNode;
-            px.infoPanel.target.appendChild(info);
-    }))},
+        info.classList.add('info-list-node');
+        info.innerHTML = node;
+        return info;
+    },
+    refreshInfoPanels() {[p1,p2].forEach(px=>{px.infoPanel.data.forEach(node => {
+            px.infoPanel.list.appendChild(this.createInfoPanelNode(node))
+    }) })},
 }
 
 
@@ -304,6 +486,8 @@ function setActiveBoard(pX, activeBoardMode, option1, otherBoardMode, option2) {
     
     py.board.target.classList.remove('active-mode');
     py.board.mode(otherBoardMode, option2);
+
+    state.returnFromNarrative && [p1,p2].forEach(pz=>pz.board.mode('subspace'));
 }
 
 async function placeShips() {
@@ -329,6 +513,11 @@ async function placeShips() {
         await new Promise(resolve => {
             readyPlayerX = () => {
                 console.log("@PlaceShips readyPlayerX resovlve");
+                Array.from(px.shipsPanelShips.children)
+                .forEach(ship => {
+                    ship.classList.remove('clickable');
+                    ship.removeEventListener('click', placeShipsClick)
+                });
                 usr && px.shipsPanelBtn.classList.toggle('hide'); 
                 resolve(mode('ready',px))
             };
@@ -346,7 +535,6 @@ async function placeShipsClick(e) {
     const ship = state.turn.ships[e.target.id];
     if (!ship.location) {
         await new Promise((resolve) => {
-
             state.activeBoard.placeItem.set(ship,resolve);
         });
         e.target.classList.add('placed-ship');
@@ -360,35 +548,33 @@ async function placeShipsClick(e) {
     }
 }
 
-async function autoLoadShips(player) {
-    const keys = Object.keys(player.ships);
-    const allShips = player.ships;
+async function autoLoadShips(px) {
+    const keys = Object.keys(px.ships);
+    const allShips = px.ships;
     for (let i = 0; i < keys.length; i++) {
         console.log("ITERATOR", i, "allShips", allShips.length);//!
         const ship = allShips[keys[i]];
         if (!allShips[keys[i]].location) {
             await new Promise((resolve,reject) => {
-                setTimeout(()=>player.board.placeItem.set(ship,resolve,reject),50);
+                setTimeout(()=>px.board.placeItem.set(ship,resolve,reject),50);
             });
-            player.shipsPanel.querySelector(`#${ship.name}`).classList.add('placed-ship');
+            px.shipsPanel.querySelector(`#${ship.name}`).classList.add('placed-ship');
             console.log("Ship's placement location", ship); //!
         }
     }
-    if (player.name !== "BOT") {
-        player.shipsPanelBtn.classList.replace('blue', 'red');
-        player.shipsPanelBtn.textContent = "Done";
-        player.shipsPanelBtn.removeEventListener('click', autoLoadShipsCurry);
-        player.shipsPanelBtn.addEventListener('click', readyPlayerX);
+    if (px.name !== "BOT") {
+        px.shipsPanelBtn.classList.replace('blue', 'red');
+        px.shipsPanelBtn.textContent = "Done";
+        px.shipsPanelBtn.removeEventListener('click', autoLoadShipsCurry);
+        px.shipsPanelBtn.addEventListener('click', readyPlayerX);
     }
     console.log("All Ships Placed. Awaiting opponent place ships.");
 }
 
 async function seekNDestroyLoop() {
-    // mode('targeting', state.turn, state.opponent);
-
     await new Promise((resolve) => {
         readyPlayerX = () => {console.log("@targeting:ReadyPlayerX:Resolve");resolve(mode('attack'))};
-        buttons.fire.addEventListener('mouseup',readyPlayerX);
+        buttons.fire.addEventListener('click',readyPlayerX);
     });
 
     mode('attack', state.turn, state.opponent);
@@ -404,9 +590,9 @@ async function seekNDestroyLoop() {
 
     await handleFire();
 
-    // checkGameState(); // On exit, set mode to status.goto
+    await checkGameState();
 
-    saveState('full', 'targeting');
+    saveState('full');
     return switchPlayer(mode,'targeting');
 }
 
@@ -414,6 +600,7 @@ const weapons = {
     count:0,
     max:5,
     prev:[],
+    active:false,
     weapon() {
         const playerWeapons =  state.turn.player.ships[this.shipName()].weapons;
         const weaponName = this.evt.target.title;
@@ -440,7 +627,13 @@ const weapons = {
             e.target.classList.remove('selected-weapon');
             state.activeBoard.placeItem.clear();
             return;
-        } else {e.target.classList.add('selected-weapon')};
+        } else { 
+                e.target.classList.add('selected-weapon');
+            console.log(e.target);
+            state.turn.targetingPanel.target.querySelectorAll('.selected-weapon')
+                .forEach(weapon=>weapon!==e.target 
+                    && weapon.classList.remove('selected-weapon') );
+        };
     
         const originCell = () => {
             const player = state.turn.player; 
@@ -449,16 +642,23 @@ const weapons = {
             return player.board.cells[id];
         };
     
-        const handleColor = (option) => {
-            console.log("handleColor()");
+        const handleColor = (option,data) => {
+            console.log("handleColor("+option+data+")");
+            console.log(data);
             switch (option) {
-                case 'maxed-weapon': e.target.classList.add('maxed-weapon'); break;
-                case 'removed': e.target.classList.add('selectedWeapon'); break;
+                case 'maxed-weapon': this.prev[this.prev.length -1].target.classList.add('maxed-weapon'); 
+                    console.log("@handleColor maxed-weapon case triggered")
+                break;
+                case 'removed': e.target.classList.add('selected-weapon'); break;
                 default: weapon().remaining===0
                     ? e.target.classList.replace('selected-weapon', 'depleated-weapon')
                     : e.target.classList.remove('selected-weapon');
             }
         };
+
+        const updateInfo = (weapon) => {
+                this.prev[this.prev.length -1].target.setAttribute('data-before', weapon.max - this.count)
+        }
     
         const checkDone = (option, weapon) => {
             console.log("checkDone("+option+", "+weapon+")");
@@ -466,7 +666,8 @@ const weapons = {
             switch (option) {
                 case 'add': {this.count++; typeof weapon.remaining==='number' && weapon.remaining--;
                 } break;
-                case 'remove': { this.count--; typeof weapon.remaining==='number' && weapon.remaining++; weapons.set(self.prev.pop())
+                case 'remove': { this.count--; typeof weapon.remaining==='number' && weapon.remaining++;
+
                     console.log("THIS IS PREV AT READ", self.prev); 
                 } break;
             }
@@ -481,19 +682,21 @@ const weapons = {
 
         const signal = 
         new Signal(
-            (weapon)=>checkDone('add',weapon),
-            (weapon,option)=>{checkDone('remove',weapon);handleColor(option)},
+            (weapon)=>{checkDone('add',weapon);updateInfo(weapon)},
+            (weapon,option)=>{checkDone('remove',weapon);handleColor(option);updateInfo(weapon)},
             state.activeBoard
-        ).send();
+        ); signal.send();
         
         await new Promise((resolve,reject) => {
             console.log("Weapon Sent:",weapon(),originCell())
-            const onResolve = () => { handleColor(true); resolve() };
-            const onReject = () => { handleColor(); reject() };
+            this.active = true;
+            const onResolve = (data,option) => { handleColor(option,data); resolve() };
+            const onReject = (data,option) => { handleColor(option,data); reject() };
             state.activeBoard.placeItem.set(weapon(), onResolve, onReject, originCell());
         });
 
         signal.deactivate();
+        this.active = false;
         console.log("Weapon Max Reached for turn.")
     },
 }
@@ -504,16 +707,12 @@ async function handleFire() {
     const count = [0,0];
 
     await new Promise((resolve) => {
-        state.turn===p1
-            ? p2.board.handleFire(p2.player.ships, resolve) 
-            : p1.board.handleFire(p1.player.ships, resolve);
-    }).then(result => { result.forEach(array => {
-        const info = document.createElement('li');
-            info.classList.add('info-list-node');
-            const textNode = `<div class="pill"></div>${array[0]} on cell ${array[1].name}. <span>+1</span>`;
-            info.innerHTML = textNode;
-            state.turn.infoPanel.target.appendChild(info);
-            state.turn.infoPanel.data.push(textNode);
+            state.opponent.board.handleFire(state.opponent.ships, resolve) 
+    }).then(result =>{ result.forEach(array => {
+        const color = array[0]==='Hit' ? 'dgreen' : 'cwhite';
+        const num = array[0]==='Hit' ? '+1' : '-1';
+        const textNode = `<div class="pill ${color}"></div>${array[0]} on cell ${array[1].name}. <span>${num}</span>`;
+        state.turn.infoPanel.add(textNode);
         console.log(result);
         if (array[0]==='Hit') {count[0]++; state.turn.player.hits.push(array[1]);
         } else {count[1]++; state.turn.player.misses.push(array[1])};
@@ -528,6 +727,8 @@ async function handleFire() {
     await delay(3000);
     return console.log('Done Firing')
 }
+
+
 
 
 // INIT
@@ -567,10 +768,10 @@ function init() {
 
     // EVENT LISTENERS
     for (let modal in modals) {modal!=='switchUser' && modals[modal].listen()};
-    buttons.switchUser.addEventListener('click', modals.switchUser.show.bind(modals.switchUser));
+    buttons.switchUser.addEventListener('click', ()=>{new Promise((resolve)=>{
+        modals.switchUser.show(resolve)}).then(()=>{setActiveBoard(state.turn);switchPlayer();mode('targeting')})});
     buttons.toggleSubspace.target.addEventListener('click', buttons.toggleSubspace.action);
-
-    buttons.devToggleOppSubspace.target.addEventListener('click', buttons.devToggleOppSubspace.action);
+    buttons.pause.addEventListener('click', buttons.pause.show);
 
     // EVENT HANDLERS
     document.addEventListener('mousemove', (e) => {
@@ -581,14 +782,18 @@ function init() {
             | elements.includes(p2.shipsPanel) 
             | elements.includes(p1.statusPanel) 
             | elements.includes(p2.statusPanel) 
+            | elements.includes(p1.infoPanel.target)
+            | elements.includes(p2.infoPanel.target)
             | elements.includes(buttons.dbControlsGrid)) {
             document.querySelector('main').style.pointerEvents = 'none';
-        } else {document.querySelector('main').style.pointerEvents = 'all';}
+        } else {
+            document.querySelector('main').style.pointerEvents = 'all';}
     });
 
     // INIT PLAYER SPECIFFIC ITEMS
     [p1,p2].forEach(px => {
-        px.infoPanel.target.innerHTML = `<h3>${px.player.name}</h3>${px.player.username || ''}`;
+        px.infoPanel.target.querySelector('h3').textContent = px.player.name;
+        px.infoPanel.target.querySelector('p').textContent = px.player.userName;
         // BUILD SHIPS ON Dashboard
         px.shipsPanelShips.classList.add(px.player.side)
         Object.values(px.ships).forEach(ship => {
@@ -603,7 +808,7 @@ function init() {
         
         // BUILD TARGETING PANEL
         px.targetingPanel.action = weapons.set.bind(weapons);
-        px.targetingPanel.target.classList.add(px.player.side)
+        px.targetingPanel.target.classList.add(px.player.side);
         Object.values(px.player.ships).forEach(ship => {
             const row = document.createElement('div');
                 row.classList.add('targeting-group');
@@ -615,7 +820,7 @@ function init() {
                 shipWrapper.setAttribute('owner', px===p1 ? 'p1' : 'p2');
             const weapons = document.createElement('div');
                 weapons.classList.add('weapons');
-                Object.values(ship.weapons).forEach(weapon => {
+                Object.values(ship.weapons).reverse().forEach(weapon => {
                     const get = (item) => px.player.shipsConstructor.getWeaponSymbol(item);
                     const img = document.createElement('div')
                         img.innerHTML = get(weapon.name);
@@ -641,7 +846,8 @@ function init() {
 };
 
 function boot() { console.log("BOOT GAME");
-    getState('profiles'); init(); getState('gameState');
+    getState('profiles'); init(); getState('gameState'); getState('settings');
+    mode('pause');
     let count = 111;
         p1.player.name && (count += 100);
         p2.player.name && (count += 10);
@@ -652,18 +858,21 @@ function boot() { console.log("BOOT GAME");
         count -=10 && count < 10 && console.error("BOOT ERROR! player2 Failed to load",p2);
         count -=1 && count < 1 && console.error("BOOT ERROR! No gameKey detected on state Object",state);
     }
+    console.log("Return from Narrative?", state.returnFromNarrative);
 };
+
+
 
 
 // DATA
 function getState(option) {
-    // if (option==='gameState' && (Date.now() - state.update < 2000)) {return(console.warn("gameState request too soon!"))}
     console.log("getState("+option+")");
     switch (option) {
         case 'gameMode': {return sessionStorage.getItem('gameMode')}; break;
         case 'storyModePlayer': {return sessionStorage.getItem('storyModePlayer')} break;
         case 'gameKey': {return sessionStorage.getItem('gameKey')} break;
-        case 'full': getState('profiles'); getState('gameState'); break;
+        case 'settings': {settings = JSON.parse(sessionStorage.getItem('settings')); modals.pause.playGame(true)} break;
+        case 'full': getState('profiles'); getState('gameState'); getState('settings'); break;
 
         case 'profiles': {
             p1.config = JSON.parse(sessionStorage.getItem('player1'));
@@ -676,6 +885,7 @@ function getState(option) {
             p1.infoPanel.data = object.infoPanels.p1;
             p2.infoPanel.data = object.infoPanels.p2;
             actions.refreshInfoPanels();
+            narrativeStatus.render();
             console.log("POSTSTATE",state);
             function GameState(gameState) { console.log("Reconstruct GameState Object");
                 this.gameKey = gameState?.state?.gameKey || getState('gameKey');
@@ -685,6 +895,21 @@ function getState(option) {
                 this.opponent = gameState?.state?.opponent?.player?.name===p1.player.name ? p1 : p2 ?? p2;
                 this.turnsTaken = gameState?.state?.turnsTaken || {player1:[0,0], player2:[0,0]};
                 this.update = Date.now();
+                this.returnFromNarrative = gameState?.returnFromNarrative || true;
+                this.narrative = {
+                    winner: gameState?.state?.narrative.winner || 'user',
+                    storyModePlayer: getState('storyModePlayer')==='player1' ? p1 : p2 || null,
+                    goto: gameState.state?.narrative.goto || 'firstBlood',
+                    firstBlood: gameState?.state?.narrative.firstBlood || false,
+                    firstSunkenShip: gameState?.state?.narrative.firstSunkenShip || false,
+                    turningPoint: gameState?.state?.narrative.turningPoint || false,
+                    victoryInSight: gameState?.state?.narrative.victoryInSight || false,
+                    winGame: gameState?.state?.narrative.winGame || false,
+                    multiAchievement: gameState?.state?.narrative.multiAchievement || []
+                };
+                this.winner = gameState?.state?.winner || null;
+                this.looser = gameState?.state?.looser || null;
+                this.gameover = gameState?.state?.gameover || null;
             };
             ((state.turn===p1 || state.turn===p2) && state.gameKey) && console.log("GameState Successfully Restored");
             return state;
@@ -707,6 +932,7 @@ function getState(option) {
 function saveState(option,data=true) {
     const useErrorSafe = sessionStorage.getItem('useErrorSafe');
     headerEl.textContent = "Saving. . .";
+
     switch (option) {
         case 'full': { console.log("SaveState full. Players storageEnabled?", p1.player.storageEnabled, p2.player.storageEnabled);
             if (typeof data==='string') saveState('gameMode', data);
@@ -724,23 +950,27 @@ function saveState(option,data=true) {
             sessionStorage.setItem('player2', p2.player.PlayerState('str'));
             sessionStorage.setItem('gameState', JSON.stringify({state,infoPanels:actions.getPlayerInfoPanels()}));
             !data && sessionStorage.setItem('gameMode', state.mode);
+            sessionStorage.setItem('settings', JSON.stringify(settings));
             console.log("saveState done.")
         } break;
 
         case 'profiles': {sessionStorage.setItem('player1', p1.player.PlayerState('str'));
                           sessionStorage.setItem('player2', p2.player.PlayerState('str'));
         } break;
+        case 'settings': {sessionStorage.setItem('settings', JSON.stringify(settings))} break;
         case 'gameState': sessionStorage.setItem('gameState', JSON.stringify({state,infoPanels:actions.getPlayerInfoPanels()})); break
         case 'gameMode': sessionStorage.setItem('gameMode', data); break;
     }
 }
 
 
+
+
 // MANAGEMENT
 async function mode(option,px,py,data) {
     console.log("Dashboard Mode Set:", option, px, data);
     // let usr = !px?.player.name === 'BOT'
-    if (!state.turn && data===false) getState('gameState');
+    if (!state?.turn && data===false) getState('gameState');
     state.mode = option;
 
     switch (option) {
@@ -762,11 +992,13 @@ async function mode(option,px,py,data) {
 
         case 'place-ships': {
             getState('storyModePlayer') && boot();
+            state.returnFromNarrative = false;
             await placeShips();
         }; break;
 
         case 'ready': { px.status = 'ready';
             state.activeBoard.mode('subspace');
+            state.turn = state.turn===p1 ? p2 : p1;
             await new Promise(resolve=>modals.switchUser.show(resolve));
             saveState('profiles');
             if (p1.status === 'ready' && p2.status === 'ready') {
@@ -788,12 +1020,17 @@ async function mode(option,px,py,data) {
         } break;
 
         case 'targeting': {
-            saveState('gameMode', 'targeting');
+            try {state.turn.player} catch {boot()};
+            saveState('full', 'targeting');
             headerEl.innerHTML = `<strong>${state.turn.player.name}</strong> Is Targeting`;
             console.log("ALL STATE AT TARGETING", p1,p2,state);
-            setActiveBoard(state.opponent, 'targeting', 'subspace', 'static', 'subspace');
+            console.log("@targeting mode disable subspace")
+            setActiveBoard(state.opponent, 'targeting', 'subspace', 'static', 'disable-subspace');
+            state.returnFromNarrative = false;
+            state.multiAchievement = [];
             state.turn.targetingPanel.activate();
             console.log("targeting environment set.");
+            !tutorial.howToPlace[0] && notify.show(tutorial.howToPlace[1]);
             seekNDestroyLoop();
         } break;
 
@@ -810,18 +1047,29 @@ async function mode(option,px,py,data) {
             console.log("attack done.")
         } break;
 
-        case 'safeSpace': { //! NOT SET UP
-            headerEl.textContent = "Safe Space. Press Take Turn to take turn";
-            buttons.switchUser.activate({
-                text: `Take Turn<br><strong>${state.turn.player.name}</strong>`,
-                action(){mode(getState('gameMode'))}
-            })
+        case 'goto-narrative': {saveState('full'); window.location = "./narrative.html"} break;
+        
+        case 'summary': { 
+            boot();
+            headerEl.innerHTML = `Game Over. ${state.winner} Wins!`;
+            state.returnFromNarrative = false;
+            state.multiAchievement = [];
+            setActiveBoard(state.winner===p1.player.name?p1:p2, 'static','disable-subspace', 'static','disable-subspace');
+            buttons.fire.addEventListener('click', ()=>checkGameState('summary'));
+            buttons.fire.textContent = "view Game Summary";
+            buttons.switchUser.textContent = "New Game"
+            buttons.switchUser.addEventListener('click', ()=>window.location = "../index.html")
+            buttons.enable('fire');
+            buttons.disable('switchUser');
         } break;
 
-        case 'goto-narrative': {saveState('full'); window.location = "http://127.0.0.1:5500/screens/narrative/narrative.html"} break;
+        case 'pause': {
+            document.querySelector('#setting-switch-user-modal').checked = settings.switchUserModal;
+            document.querySelector('#setting-switch-user-password').checked = settings.switchUserPw;
+            document.querySelector('#setting-dim-brackets').checked = settings.dimBrackets;
+            document.querySelector('#setting-opp-subspace').checked = settings.devToggleOppSubspace;
+        } break;
         
-        case 'pause': {} break;
-        case 'summary': {} break;
         case 'keyboard': {
             switch (data) {
                 case 'default': [px,py].forEach(pz=>pz.board.enableKeyboard=true); break;
@@ -844,111 +1092,210 @@ async function mode(option,px,py,data) {
     return 0;
 }
 
-//TODO: TEST & MV->FUNC
-function checkGameState() {
-    console.log("################ GAMESTATE ##################");
-    [p1,p2].forEach(px=>{
-        console.log(`[|]${px.player.name}: hits`, px.player.hits)
-        console.log(`[|]${px.player.name}: misses`, px.player.misses)
-        console.log(`[|]${px.player.name}: health`, px.player.damage.health)
-    })
+async function checkGameState(multiAchievement,MAGoto) { console.log("checkGameState()", state.narrative.goto);
+    const condition = multiAchievement || MAGoto || state.narrative.goto;
+    const smp = getState('storyModePlayer') ? true : false;
+    const message =  smp
+        ? "Press Ok to continue to the narrative."
+        : "Press Ok to return to the game";
+    const roundWinner = state.turn.which===getState('storyModePlayer')
+        ? state.narrative.winner = 'user'
+        : state.narrative.winner = 'opp';
+    const logo = state.turn.player.side==='starfleet'
+        ? '../../assets/svg/Starfleet_badge_illustration_2.svg'
+        : '../../assets/svg/borg_insignia.svg'
 
-    console.log("First Blood condition Result",
-        "Reducer: ", eval( [p1.player.hits,p2.player.hits].reduce((acc,current) => {
-                    acc += Object.values(current).length },0) ),
-        "Logic: ",  !state.firstBlood
-    )
-    console.log("firstSunkenShip condition Result",
-        "Hits length Matches area?: ", eval( [Object.values(p1.player.ships),Object.values(p2.player.ships)].forEach(px => {
-                px.forEach(ship => {if (ship.hits.length === ship.area()) {console.log(ship.hits.length)}})}) )
-    )
-    console.log("turningPoint condition Result",
-        "Reducer: ", eval( [Object.values(p1.player),Object.values(p2.player)]
-                .reduce((acc,px) => px.ships.forEach(ship => {
-                    if (ship.hits.length === ship.area()) acc[px.name]++
-                }), {[p1.player.name]:0,[p2.player.name]:0}) )
-    )
-    console.log("victoryInSight condition Result",
-        "Reducer: ", eval( [Object.values(p1.player),Object.values(p2.player)]
-                .reduce((acc,px) => px.ships.forEach(ship => {
-                    if (ship.hits.length === ship.area()) acc[px.name]++
-                }), {[p1.player.name]:0,[p2.player.name]:0}) )
-    )
-    console.log("winner condition Result",
-        "Reducer: ", eval( [Object.values(p1.player),Object.values(p2.player)]
-                .reduce((acc,px) => px.ships.forEach(ship => {
-                    if (ship.hits.length === ship.area()) acc[px.name]++
-                }), {[p1.player.name]:0,[p2.player.name]:0}) )
-    )
-    console.log("################### END #####################")
+    switch (condition) {
+        case 'firstBlood': {
+                if (Object.values(state.turn.player.hits).length > 0) {
+                    state.narrative.winner = roundWinner;
+                    state.narrative.firstBlood = true; 
+                    state.narrative.goto = 'firstSunkenShip';
+                    state.turn.infoPanel.add(`<div class="pill gold"></div><strong>First Blood Achieved</strong><img src="${logo}">`);
+                    checkGameState('firstSunkenShip');
+                    saveState('full');
+                    await new Promise((resolve) => {
+                        modals.info.show({
+                            title: "First Blood",
+                            subhead: `${state.turn.player.name} strikes the first hit!`,
+                            text: message,
+                            action: resolve
+                        });
+                    });
+                } else return false;
+            } break;
 
-    // switch (state.goto) {
-    //     case 'firstBlood': {
-    //             if ( [p1.player.hits,p2.player.hits].reduce((acc,current) => {
-    //                 acc += Object.values(current).length },0)
-    //             > 1 && !state.firstBlood ) {
-    //                 state.winner = state.turn;
-    //                 state.firstBlood = true; 
-    //                 state.goto = 'firstSunkenShip';
-    //                 saveState('full');
-    //                 mode('goto-narrative') }
-    //         } break;
-    //     case 'firstSunkenShip': {
-    //         [Object.values(p1.player.ships),Object.values(p2.player.ships)].forEach(px => {
-    //             px.forEach(ship => {
-    //                 if (ship.hits.length === ship.area()) {
-    //                     state.winner = state.turn;
-    //                     state.firstSunkenShip = true;
-    //                     state.goto = 'turningPoint';
-    //                     saveState('full');
-    //                     mode('goto-narrative');
-    //                 }
-    //             })
-    //         })
-    //     } break;
-    //     case 'turningPoint': {
-    //         const reduction = [Object.values(p1.player),Object.values(p2.player)]
-    //             .reduce((acc,px) => px.ships.forEach(ship => {
-    //                 if (ship.hits.length === ship.area()) acc[px.name]++
-    //             }), {[p1.player.name]:0,[p2.player.name]:0});
-    //         if (Object.values(reduction).some(result=>result>2)) {
-    //             state.winner = state.turn;
-    //             state.turningPoint = true;
-    //             state.goto = 'victoryInSight';
-    //             saveState('full');
-    //             mode('goto-narrative');
-    //         }
-    //     } break;
-    //     case 'victoryInSight': {
-    //         const reduction = [Object.values(p1.player),Object.values(p2.player)]
-    //             .reduce((acc,px) => px.ships.forEach(ship => {
-    //                 if (ship.hits.length === ship.area()) acc[px.name]++
-    //             }), {[p1.player.name]:0,[p2.player.name]:0});
-    //         if (Object.values(reduction).some(result=>result>3)) {
-    //             state.winner = state.turn;
-    //             state.victoryInSight = true;
-    //             state.goto = 'winner';
-    //             saveState('full');
-    //             mode('goto-narrative');
-    //         }
-    //     } break;
-    //     case 'winGame': {
-    //         const reduction = [Object.values(p1.player),Object.values(p2.player)]
-    //             .reduce((acc,px) => px.ships.forEach(ship => {
-    //                 if (ship.hits.length === ship.area()) acc[px.name]++
-    //             }), {[p1.player.name]:0,[p2.player.name]:0});
-    //         if (Object.values(reduction).some(result=>result===5)) {
-    //             state.winner = state.turn;
-    //             state.winGame = true;
-    //             state.goto = 'summary';
-    //             saveState('full');
-    //             winGame();
-    //             mode('goto-narrative');
-    //         }
-    //     } break;
-    // }
+        case 'firstSunkenShip': { 
+            Object.values(state.opponent.player.ships).forEach(ship => {
+                if (ship.hits.length===ship.area()) {state.narrative.firstSunkenShip = true}; 
+            });
+            if (multiAchievement) {return state.multiAchievement.push('firstSunkenShip')};
+            if (state.narrative.firstSunkenShip) {
+                state.narrative.winner = roundWinner;
+                state.narrative.firstSunkenShip = true;
+                state.narrative.goto = 'turningPoint';
+                state.turn.infoPanel.add(`<div class="pill gold"></div><strong>Sink First Ship Achieved</strong><img src="${logo}">`);
+                checkGameState('turningPoint');
+                checkGameState('victoryInSight');
+                saveState('full');
+                await new Promise((resolve) => {
+                    modals.info.show({
+                        title: "First Sunken Ship",
+                        subhead: `${state.turn.player.name} sinks the first ship!`,
+                        text: message,
+                        action: resolve
+                    });
+                });
+                mode('goto-narrative');
+            } else return false;
+        } break;
+
+        case 'turningPoint': {            
+            const reduction = Object.values(state.opponent.ships).reduce((acc,ship) => {
+                if (ship.hits.length===ship.area()) acc++;
+                return acc;
+            },0);
+            if (multiAchievement) {return state.multiAchievement.push('turningPoint')};
+            if (reduction == 3) {
+                state.narrative.winner = roundWinner;
+                state.narrative.goto = 'victoryInSight';
+                state.narrative.turningPoint = true;
+                state.turn.infoPanel.add(`<div class="pill gold"></div><strong>Turning Point Achieved</strong><img src="${logo}">`);
+                checkGameState('victoryInSight');
+                checkGameState('winGame');
+                saveState('full');
+                await new Promise((resolve) => {
+                    modals.info.show({
+                        title: "Turning Point",
+                        subhead: `${state.turn.player.name} gains the upper hand!`,
+                        l3: "You've sunk 3/5 of your opponent's ships!",
+                        text: message,
+                        action: resolve
+                    });
+                });
+            } else return false;
+        } break;
+
+        case 'victoryInSight': {
+            const reduction = Object.values(state.opponent.ships).reduce((acc,ship) => {
+                if (ship.hits.length===ship.area()) acc++;
+                return acc;
+            },0);
+            if (multiAchievement) {return state.multiAchievement.push('victoryInSight')};
+            if (reduction == 4) {
+                state.narrative.winner = roundWinner;
+                state.narrative.goto = 'winGame';
+                state.narrative.victoryInSight = true;
+                state.turn.infoPanel.add(`<div class="pill gold"></div><strong>Victory In sight Achieved</strong><img src="${logo}">`);
+                checkGameState('winGame');
+                saveState('full');
+                if (roundWinner==='user') {
+                    await new Promise((resolve) => {
+                        modals.info.show({
+                            title: "Victory In Sight",
+                            subhead: `${state.turn.player.name} has the enemy on their knees!`,
+                            l3: "Only 1 more ship remains. You're on your way to victory!",
+                            text: message,
+                            action: resolve
+                        });
+                    });
+                } else {
+                    await new Promise((resolve) => {
+                        modals.info.show({
+                            title: "Event Horizon",
+                            subhead: `${state.turn.player.name} has ${state.opponent.player.name} on their knees!`,
+                            l3: "The future looks grim. Will you make a comeback?",
+                            text: message,
+                            action: resolve
+                        });
+                    });
+                }
+            } else return false;
+        } break;
+        
+        case 'winGame': {
+            const reduction = Object.values(state.opponent.ships).reduce((acc,ship) => {
+                if (ship.hits.length===ship.area()) acc++;
+                return acc;
+            },0);
+            if (multiAchievement) {return state.multiAchievement.push('winGame')};
+            if (reduction == 5) {
+                state.narrative.winner = roundWinner;
+                state.winner = state.turn.player.name;
+                state.looser = state.opponent.name;
+                state.narrative.goto = 'summary';
+                state.narrative.winGame = true;
+                state.mode = 'summary';
+                state.turn.infoPanel.add(`<div class="pill ored"></div><strong></strong>Game Winner!</strong><img src="${logo}">`);
+                saveState('full', 'summary');
+                if (roundWinner==='user') {
+                    await new Promise((resolve) => {
+                        modals.info.show({
+                            title: `Congratulations ${state.turn.player.name}`,
+                            subhead: "You've Won the Game!",
+                            text: smp ? message : "Press Ok to view a game summary",
+                            action: resolve
+                        });
+                    });
+                } else {
+                    await new Promise((resolve) => {
+                        modals.info.show({
+                            title: `${state.turn.player.name} Takes the Victory`,
+                            subhead:  `${state.opponent.player.name} has lost`,
+                            l3: "Better Luck next time!",
+                            text: smp ? message : "Press Ok to view a game summary",
+                            action: resolve
+                        });
+                    });
+                }
+            } else return false;
+        } break;
+
+        case 'summary': {
+            if (state.narrative.winGame) {
+                state.gameover = true;
+                saveState('full');
+                function compileGameSummary() {
+                    const ul = document.createElement('ul');
+                        ul.classList.add('gameSummary');
+                    for (let i=0; i<Math.max(p1.infoPanel.data.length,p2.infoPanel.data.length); i++) {
+                        const li1 = document.createElement('li');
+                            li1.innerHTML = `<strong>${p1.player.name}:</strong> ${p1.infoPanel.data[i]}`
+                        const li2 = document.createElement('li');
+                            li2.innerHTML = `<strong>${p2.player.name}:</strong>  ${p2.infoPanel.data[i]}`
+                        ul.appendChild(li1);
+                        ul.appendChild(li2);
+                    }
+                    return ul;
+                }
+                await new Promise((resolve) => {
+                    modals.info.show({
+                        title: `Game Summary`,
+                        subhead: `${state.winner} Won`,
+                        l3: `${state.looser} Lost`,
+                        element: compileGameSummary(),
+                        action: resolve
+                    });
+                });
+            } else return false;
+        } break;
+    }
+
+    //TODO: Any time a ship is sunk, something should happen
+
+    if (!MAGoto) {
+        if (state.multiAchievement.length > 0) {
+            for (let i=0; i<state.multiAchievement.length; i++) {
+                await checkGameState(null,state.multiAchievement[i])
+            }
+        };
+        if (smp && !state.gameover) {
+            switchPlayer();
+            saveState('gameState');
+            mode('goto-narrative');
+        } else return true;
+    }
 }
-
 
 
 
@@ -973,8 +1320,6 @@ async function handleFailToLoad(err) {
     }
 }
 
-document.getElementById('dev_recover').addEventListener('click', ()=>mode('recovery'));
-
 document.addEventListener('keypress', (e)=>{if (!p1.board.enableKeyboard && e.key=='z')recover(true)});
 function recover(e) {
     if(e) {sessionStorage.removeItem('recovery-error');recoveryCounter=0;}
@@ -985,6 +1330,7 @@ function recover(e) {
     console.log("STATE: ", state);
     mode(getState('gameMode'), p1);
 }
+
 
 
 

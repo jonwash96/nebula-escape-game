@@ -10,33 +10,15 @@ const imageEl = document.querySelector('img');
 const promptOptionsEl = document.getElementById('prompt-options');
 const continueBtn = document.getElementById('continue');
 
-// DEV MODE // Advanced users may use this to explore the app or reference a speciffic chapter
-const devMode = true;
-document.getElementById('reset-storage').addEventListener('click',resetPlayerState);
-document.getElementById('new-outcome').addEventListener('click',handleOutcomes);
-document.getElementById('back-to-bridge').addEventListener('click', exitStoryMode);
-const devModeBtns = document.querySelectorAll('.goto');
-devModeBtns.forEach(el=>el.title = "dev-mode dissabled");
-document.getElementById('toggle-dev-mode-1').addEventListener('click', (e) => {
-    const enableDevMode = () => devModeBtns.forEach(el=> {
-        el.addEventListener('click', e=> {
-            player.narrative.goto = e.target.id.replace('goto-', '');
-            sessionStorage.setItem('player', JSON.stringify(player));
-            console.log(e.target.id);
-            window.location.reload();
-    }); el.title = el.id});
-    document.getElementById('toggle-dev-mode-2').addEventListener('click',enableDevMode);
-    setTimeout(()=>document.getElementById('toggle-dev-mode-2').removeEventListener('click',enableDevMode), 5000)
-});
-
 Array.prototype.randomIDX = function() {return this[Math.floor(Math.random() * this.length)]};
 
-let storyModePlayer, player;
+let storyModePlayer, player, gameState;
 let response, gotoNext;
 let handleWinCondition = 0;
 
 try {storyModePlayer = sessionStorage.getItem('storyModePlayer')
     player = JSON.parse(sessionStorage.getItem(storyModePlayer));
+    gameState = JSON.parse(sessionStorage.getItem('gameState'));
     if (player.narrative == null) throw new Error("Error getting player state. Resolving. . .")
     console.log("PlayerState succcess");
     console.log(player.narrative);
@@ -52,7 +34,7 @@ catch (err) {
     }
 }}
 
-render(player.narrative.goto, player.winner);
+render(player.narrative.goto, gameState.state.narrative.winner); 
 
 // TODO: Put the lore on the title screen.
 
@@ -75,7 +57,7 @@ function render(goto, winner) {
         } break;
         case 'part2': break;
         case 'part3': { 
-            if (player.winner === 'user') {
+            if (gameState.state.narrative.winner === 'user') {
                 if (player.narrative.part2.winner === 'user' &&
                   player.narrative.part2.option ==="D") {
                     useNarrarive = story[goto][winner].narrative[1];
@@ -84,21 +66,21 @@ function render(goto, winner) {
                     useNarrarive = story[goto][winner].narrative[0]
                 };
             } 
-            else if (player.winner === 'bot') {
+            else if (gameState.state.narrative.winner === 'opp') {
                 if (player.narrative.part2.winner === 'user') {
                     if (player.narrative.part2.option ==="D") {
                         useNarrarive = story[goto][winner].narrative[1] 
                     } else {
                         useNarrarive = story[goto][winner].narrative[0]
                     }; 
-                } else if (player.narrative.part2.winner === 'bot') {
+                } else if (player.narrative.part2.winner === 'opp') {
                     useNarrarive = story[goto][winner].narrative[2]
                 }; 
             }; 
         } break;
         case 'part4': break;
         case 'part5': break;
-        case 'part6': {handleWinCondition =  player.winner==='user' ? 1 : 100;
+        case 'part6': {handleWinCondition =  gameState.state.narrative.winner==='user' ? 1 : 100;
             document.querySelector('h3').textContent = "Which Do You Choose?"
             tallyPath() === 'courage'
             ? useOutcome = 1
@@ -150,13 +132,14 @@ function render(goto, winner) {
 
 function handleResponse(e,prompt,useOutcome) {
     response = prompt;
+    const title = titleEl.textContent;
     player.narrative[player.narrative.goto] = {
-        winnner:player.winner,
+        winner:gameState.state.narrative.winner,
         option:response.option,
-        prompt, response
+        title, response
     };
 
-    if (handleWinCondition===2) {handleTextResponse(e,prompt); return;}
+    if (handleWinCondition===2) {return handleTextResponse(e,prompt)};
     
     continueBtn.classList.replace('sdblue', 'red');
     continueBtn.classList.add('active');
@@ -175,7 +158,12 @@ function handleOutcomes(e,useOutcome) {
 }
 
 function handleTextResponse(e,prompt) {
-    player.narrative[player.narrative.goto] = response;
+    const title = titleEl.textContent;
+    player.narrative[player.narrative.goto] = {
+        winner:gameState.state.narrative.winner,
+        option:response.option,
+        title, response
+    };
     continueBtn.removeEventListener('click', handleOutcomes);
     continueBtn.addEventListener('click', exitStoryMode);
     subtitleEl.innerHTML = "Your Response";
@@ -211,33 +199,53 @@ function tallyPath(option) {
 
 function exitStoryMode() {
     promptWrapperEl.innerHTML = 'loading...';
-    devMode && (player.winner = 'user');
+    let reload;
 
-    const tally = tallyPath('add');
+    tallyPath('add');
+
+    if (gameState.state.narrative.multiAchievement?.length > 0) {
+        reload = true; gameState.state.narrative.miltiAchievement.shift();
+    };
+    gameState.state.returnFromNarrative = true;
+    sessionStorage.setItem('gameState', JSON.stringify(gameState));
 
     player.narrative.goto = gotoNext;
     player.narrative.path[tallyPath()]+1;
     player.update = Date.now();
     if (!player.narrative.goto==='intro') {
     player.narrative[player.narrative.goto] = 
-        {winner:player.winner, option:response.option};
+        {winner:gameState.state.narrative.winner, option:response.option};
     };
     sessionStorage.setItem(storyModePlayer, JSON.stringify(player));
 
     const currentGame = JSON.parse(localStorage.getItem('currentGame'));
     if (!player.narrative.goto==='intro') {
         currentGame[storyModePlayer].narrative[player.narrative.goto] = 
-            {winner:player.winner, option:response.option};
+            {winner:gameState.state.narrative.winner, option:response.option};
     };
     localStorage.setItem('currentGame', JSON.stringify(currentGame));
     
-    devMode && window.location.reload();
-    window.location = "../dashboard/dashboard.html"
+    reload
+        ? window.location.reload()
+        : window.location = "./dashboard.html"
 }
 
-function resetPlayerState() {
-    sessionStorage.removeItem('storyModePlayer');
-    console.log("PlayerState reset.", 
-        JSON.parse(sessionStorage.getItem('storyModePlayer'))
-    )
-}
+
+
+
+// EASTER-EGGS
+document.getElementById('new-outcome').addEventListener('click',handleOutcomes);
+document.getElementById('back-to-bridge').addEventListener('click', exitStoryMode);
+const devModeBtns = document.querySelectorAll('.goto');
+devModeBtns.forEach(el=>el.title = "dev-mode disabled");
+document.getElementById('toggle-dev-mode-1').addEventListener('click', (e) => {
+    const enableDevMode = () => devModeBtns.forEach(el=> {
+        el.addEventListener('click', e=> {
+            player.narrative.goto = e.target.id.replace('goto-', '');
+            sessionStorage.setItem('player', JSON.stringify(player));
+            console.log(e.target.id);
+            window.location.reload();
+    }); el.title = el.id});
+    document.getElementById('toggle-dev-mode-2').addEventListener('click',enableDevMode);
+    setTimeout(()=>document.getElementById('toggle-dev-mode-2').removeEventListener('click',enableDevMode), 5000)
+});

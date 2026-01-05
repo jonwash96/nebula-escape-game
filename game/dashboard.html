@@ -13,9 +13,12 @@
     <dialog id="db-info-modal" class="midnight">
         <h1>Title</h1>
         <h2>Subheadding</h2>
+        <h5 style="font-style:italic;">Level 3 heading</h5>
         <p>Text Content</p>
+        <div>dom node(s)</div>
         <div class="btn-block">
-            <button type="button" class="tile-btn blue clickable">Ok</button>
+            <button type="button" class="tile-btn blue active">Ok</button>
+            <button type="button" class="tile-btn red active hide">Ok</button>
         </div>
     </dialog>
     <dialog id="db-switch-user-modal" class="midnight">
@@ -24,7 +27,7 @@
         <p></p>
         <input type="password" class="textbox"></input>
         <div class="btn-block">
-            <button type="button" class="tile-btn blue clickable">Ok</button>
+            <button type="button" class="tile-btn blue active">Ok</button>
         </div>
     </dialog>
     <dialog id="db-instance-modal" class="midnight">
@@ -46,6 +49,21 @@
             <button type="button" class="tile-btn steelblue active">Toggle Keyboard Mode</button>
         </div>
     </dialog>
+    <dialog id="pause-menu" class="midnight">
+        <img class="logotype" src="../assets/svg/logotype.svg">
+        <h1>Pause</h1>
+        <ul>
+            <li><input id="setting-switch-user-modal" type="checkbox"><label for="setting-switch-user-modal">Toggle Switch User Modal</label></li>
+            <li><input id="setting-switch-user-password" type="checkbox"><label for="setting-switch-user-password">Toggle Switch User Password</label></li>
+            <li><input id="setting-recovery-mode" type="checkbox"><label for="setting-recovery-mode">Toggle Recovery Mode Button (experts only)</label></li>
+            <li><input id="setting-opp-subspace" type="checkbox"><label for="setting-opp-subspace">Toggle Opponent Subspace Board Button (experts only)</label></li>
+            <li><input id="setting-dim-brackets" type="checkbox"><label for="setting-dim-brackets">Dim the Dashboard Brackets</label></li>
+        </ul>
+        <div class="btn-block">
+            <button type="button" class="tile-btn dblue active">Quit Game</button>
+            <button type="button" class="tile-btn blue active">Play</button>
+        </div>
+    </dialog>
 
     <main>
         <section id="p1-load-targeting-system"></section>
@@ -56,8 +74,12 @@
     <div id="db-text-overlay">
         <header id="game-status-header" class="header"></header>
 
-        <div id="p1-summary-text-overlay" class="summary-text-overlay">summ</div>
-        <div id="p1-ships-text-overlay">
+        <div id="p1-summary-text-overlay" class="summary-text-overlay">
+            <h3></h3>
+            <p></p>
+            <ul></ul>
+        </div>
+        <div id="p1-ships-text-overlay" class="ships-text-overlay">
             <div class="ships"></div>
             <button id="p1-ships-btn" type="button" class="tile-btn-mini hide">Done</button>
         </div>
@@ -67,8 +89,15 @@
             </div>
         </div>
 
-        <div id="p2-summary-text-overlay" class="summary-text-overlay">summ</div>
-        <div id="p2-ships-text-overlay">
+        <div id="notification" class="hide"><div><h4>Info</h4><span>123456789 10111213141516171819 20212223242526272829 30313233343536373839 40</span></div></div>
+        <img id="db-logotype" src="../assets/svg/logotype.svg">
+
+        <div id="p2-summary-text-overlay" class="summary-text-overlay">
+            <h3></h3>
+            <p></p>
+            <ul></ul>
+        </div>
+        <div id="p2-ships-text-overlay" class="ships-text-overlay">
             <div class="ships"></div>
             <button id="p2-ships-btn" type="button" class="tile-btn-mini hide">Done</button>
         </div>
@@ -111,29 +140,13 @@
         <div id="db-controls-grid" class="component-container">
             <div id="attack-controls" class="db-controls left">
                 <button id="btn-fire" class="tile-btn red disabled">Fire</button>
-                <button id="dev_recover" class="tile-btn cyan active">dev_recover</button>
+                <button id="dev_recover" class="tile-btn cyan"></button>
                 <button id="turn-timer" class="tile-btn blue">00:00.00</button>
                 <button id="btn-switch-user" class="tile-btn sdblue"></button>
-                <button id="dev_toggle-opp-subspace" class="tile-btn cyan">dev_toggle-opp-subspace</button>
+                <button id="dev_toggle-opp-subspace" class="tile-btn cyan"></button>
                 <button id="toggle-subspace" class="tile-btn active steelblue">Toggle Subspace</button>
             </div>
-            <div class="center">
-                <div class="status-list-item">
-                    <div class="pill red"></div>
-                    <span class="title">Life Support...</span>
-                    <span class="num">10%</span>
-                </div>
-                <div class="status-list-item">
-                    <div class="pill midnight"></div>
-                    <span class="title">Patients Healed...</span>
-                    <span class="num">+6</p>
-                </div>
-                <div class="status-list-item">
-                    <div class="pill cyan"></div>
-                    <span class="title">Shields Offline...</span>
-                    <span class="num">X</span>
-                </div>
-            </div>
+            <div class="center"></div>
             <div id="game-controls" class="db-controls right">
                 <button id="btn-full-board" class="tile-btn steelblue active">Full Board</button>
                 <button id="btn-focus-player" class="tile-btn cyan active">Focus Player</button>

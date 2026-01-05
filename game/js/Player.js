@@ -1,5 +1,5 @@
 import Ships from "./Ships.js";
-import Board from "..Board.js";
+import Board from "./Board.js";
 
 export default class Player {
     static playerNum = 0;

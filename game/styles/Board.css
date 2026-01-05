@@ -49,8 +49,9 @@
     z-index:0;
     position: relative;
     flex-grow: 1;
-
+    
     & div {
+        line-height: 0;
         margin: 0;
         padding: 0;
         border: .5px solid var(--steelblue);
@@ -62,9 +63,8 @@
         /* aspect-ratio: 1/1; */
         text-align: center;
         vertical-align: middle;
-        /* color:transparent; */
+        /* transition:background-color 200ms; */
     }
-    line-height: 0;
 
     &:hover {cursor: cell;}
     & .hover-cell:hover {
@@ -86,7 +86,7 @@
     &:hover {background-color:#b00 !important;}
 }
 
-.hitCell {background-color: #0fc;transition:background-color 800ms;}
+.hitCell {background-color: var(--green);transition:background-color 800ms;}
 .missCell {background-color: #fffb;transition:background-color 800ms;}
 .hitCell::before, .missCell::before {
     font-size:7pt;
@@ -154,7 +154,6 @@
     & svg {
         fill: var(--cyan);
         aspect-ratio: 1/1;
-        /* width: clamp(200px, 400px, max(50vh, 50vw)); */
         width: 400px;
     }
     
@@ -182,4 +181,9 @@
     transform: translate(-50%, -50%);
     pointer-events: none;
     z-index:10;
+
+    & .cls-2 {transition:fill 50ms; fill:var(--blue);}
 }
+
+.targeting-disc-place {fill:var(--cyan)!important;}
+.targeting-disc-remove {fill:var(--red)!important;}

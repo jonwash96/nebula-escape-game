@@ -46,8 +46,8 @@ export default class Board {
 		reject:null,
 		data:null,
 		count:0,
-		next(max,data){this.item.remaining===max && this.done(data)},
-		done(data){this.resolve(data); this.clear()},
+		next(max,data,option){this.item.remaining===max && this.done(data,option)},
+		done(data,option){this.resolve(data,option); this.clear()},
 		abort(data){this.reject(data); this.clear()},
 		clear() {['item','resolve','reject','data'].forEach(i=>this[i] = null); this.count=0},
 		set(item,resolve,reject,data) {
@@ -106,8 +106,9 @@ export default class Board {
 		this.numbers = [this.left, this.right];
 		this.targeting = this.targetingEl.querySelector(`section.targeting-system`);
 		this.brackets = this.targetingEl.querySelector(`.targeting-brackets`);
-		this.disc = this.targetingEl.querySelector(`.targeting-disc`);
 		this.bracketNode = this.targetingEl.querySelector(`.bracket-node > span`);
+		this.disc = this.targetingEl.querySelector(`.targeting-disc`);
+		this.targetingDiscColorEl = this.targetingEl.querySelector('.targeting-disc .cls-2');
 		
 		this.createBoard();
 
@@ -198,7 +199,7 @@ export default class Board {
 					if (cell.committedCell) cell.target.classList.remove('committedCell')
 				}); console.log("Subspace Enabled. Board "+this.boardNumber)
 			} break;
-			case 'dissable-subspace': { 
+			case 'disable-subspace': { 
 				this.target.classList.remove('subspace-mode');
 				Object.values(this.cells).forEach(cell => {
 					if (cell.committedCell) cell.target.classList.add('committedCell') 
@@ -212,7 +213,7 @@ export default class Board {
 			} break;
 			default: {return this.status.mode}
         }
-		!ctrl && data && this.mode(data,null,false);
+		!ctrl && data && this.mode(data,null,true);
     }
 
 
@@ -225,7 +226,7 @@ export default class Board {
 				this.targeting.classList.remove('hide');
 				this.disc.xpos = e.clientX;
 				this.disc.ypos = e.clientY;
-				this.bracketNode.innerHTML = hoverOver[0].classList[0]; /*`M:${e.clientX},${e.clientY}<br>B:${this.brackets.xpos},${this.brackets.ypos}`;*/
+				this.bracketNode.innerHTML = hoverOver[0].classList[0]; 
 				this.brackets.xpos = remap(e.clientX, this.bracketOffset[0][0], this.bracketOffset[0][1], this.bracketOffset[0][2], this.bracketOffset[0][3]);
 				this.brackets.ypos = remap(e.clientY, this.bracketOffset[1][0], this.bracketOffset[1][1], this.bracketOffset[1][2], this.bracketOffset[1][3]);
 			};
@@ -351,11 +352,11 @@ export default class Board {
 	}
 
 	placeShot(e) {
-		console.log("placeItemtoPlace: ",this.placeItem.item);
-		console.log("placeShot("+this.placeItem?.item.name+" on "+e.target.id+")");
+		try {console.log("placeItemtoPlace: ",this.placeItem.item);
+		console.log("placeShot("+this.placeItem?.item.name+" on "+e.target.id+")");} catch {null}
 		if (!e.target.classList.contains('cell')) {console.warn("placeShot() No classListFound");return};
 		if (this.placeItem.item && this.placeItem.item.remaining === this.placeItem.item.max)
-				return this.placeItem.abort(this.placeItem.count);
+				return this.placeItem.abort(null,this.placeItem.item,'maxed-weapon');
 
 		if (this.placeItem.item && !e.target.classList.contains('targetedCell')) {
 			this.placeItem.count++;
@@ -365,17 +366,21 @@ export default class Board {
 			this.activeCells.push(this.cells[e.target.id]);
 			console.log("Shot Placed on ", e.target.id);
 			this.signal.resolve(this.placeItem.item);
-			return this.placeItem.next(this.placeItem.item.max, 'maxed-weapon');
+			this.targetingDiscColorEl.classList.add('targeting-disc-place');
+			setTimeout(()=>this.targetingDiscColorEl.classList.remove('targeting-disc-place'),50);
+			return this.placeItem.next(this.placeItem.item.max, this.placeItem.item, 'maxed-weapon');
 		} else if (e.target.classList.contains('targetedCell')) {
 			const weapon = this.cells[e.target.id].weapon;
 			this.placeItem.count--;
 			e.target.classList.remove('targetedCell');
-			delete e.target.weapon;
-			delete e.target.originCell;
-			this.activeCells.splice(this.activeCells.indexOf(e.target.id), 1);
-			console.log("Shot Removed from ", e.target.id);
+			delete this.cells[e.target.id].weapon;
+			delete this.cells[e.target.id].originCell;
+			this.activeCells.splice(this.activeCells.findIndex(el=>el.key===e.target.id), 1);
+			this.placeItem.item = weapon;
+			console.log(weapon.name+" Removed from ", e.target.id);
 			this.doCleanCellResidue();
-			console.log("AT placeShot", e.target); console.log(weapon);
+			this.targetingDiscColorEl.classList.add('targeting-disc-remove');
+			setTimeout(()=>this.targetingDiscColorEl.classList.remove('targeting-disc-remove'),50);
 			this.signal.reject(weapon, 'removed');
 		}
 	}
@@ -388,7 +393,7 @@ export default class Board {
 			console.log("@handleFire", cell);
 			const originBoardNum = this.boardNumber===1 ? 2 : 1; 
 			console.log("Board "+this.boardNumber+" calls FIRE from "+cell.originCell.name+" with "+cell.weapon.name+". ("+cell.weapon.remaining+") Reamining shots")
-			result.push(cell.weapon.fire(originBoardNum, cell.originCell, cell, ships));
+			result.push( cell.weapon.fire(originBoardNum, cell.originCell, cell, ships) );
 			await delay();
 		};
 		resolve(result);

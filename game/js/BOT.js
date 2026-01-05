@@ -1,5 +1,5 @@
 import Ships from "./Ships.js";
-import ships from "./ships_store.js";
+import { ships } from "./ships_store.js";
 import Board from "./Board.js";
 
 export default class BOT {

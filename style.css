@@ -3,11 +3,15 @@
 * {
     box-sizing: border-box;
 
+    --cwhite: #cded;
     --lsteelblue: #406c8f;
     --steelblue: #003c5f;
     --lcyan: #80caff;
     --cyan: rgb(0, 195, 255);
     --dustycyan: rgb(100, 175, 205);
+    --green: #0fc;
+    --dgreen: #0c9;
+    --sdgreen: #096;
     --lgold: #fff34b;
     --gold: #f9c31b;
     --dgold: #c9a300;
@@ -30,9 +34,12 @@
 
 /* COLORWAYS */
 .red {background-color:var(--red) !important;color:white !important;}
+.lred {background-color:var(--lred) !important;color:white !important;}
+.ored {background-color:var(--red) !important;opacity:0.6;color:white !important;}
 .tile-btn.active.red:hover {background-color:var(--lred) !important;color:white !important;}
 .midnight {background-color:var(--midnight) !important;color:white !important;}
 .tile-btn.active.midnight:hover {background-color:var(--lmidnight) !important;color:white !important;}
+.dblue {background-color:var(--dblue) !important;color:white !important;}
 .sdblue {background-color:var(--sdblue) !important;color:white !important;}
 .tile-btn.active.sdblue:hover {background-color:var(--dblue) !important;color:white !important;}
 .steelblue {background-color:var(--steelblue) !important;color:white !important;}
@@ -43,6 +50,10 @@
 .tile-btn.active.cyan:hover {background-color:var(--lcyan) !important;color:var(--dblue) !important;}
 .gold {background-color:var(--gold) !important;}
 .tile-btn.active.gold:hover {background-color:var(--lgold) !important;}
+.green {background-color:var(--green) !important;color:black !important;}
+.dgreen {background-color:var(--dgreen) !important;color:black !important;}
+.sdgreen {background-color:var(--sdgreen) !important;color:black !important;}
+.cwhite {background-color:var(--cwhite) !important;color:black !important;}
 
 /* STYLES */
 .hide {display: none !important;}

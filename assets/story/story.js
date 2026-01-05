@@ -26,7 +26,7 @@ export const story = {
         }
       ],
     },
-    bot: () => story.part1.user
+    opp: () => story.part1.user
   },
   part2: {
     user: {
@@ -76,7 +76,7 @@ export const story = {
         {
           option: "D",
           case: 'user',
-          prompt: `Threaten the stowaways with the lives of the prisoners in the brig.`,
+          prompt: `Threaten the stowaways with the lives of the prisoners in the brig, taking a finger to show you're serious.`,
           outcomes: [
             `One stowaway surrenders voluntarily&hellip; but it&rsquo;s a ploy.`,
             `Your crew obeys &mdash; but trust in your command fractures.`,
@@ -87,13 +87,13 @@ export const story = {
         },
       ],
     },
-    bot: {
+    opp: {
       title: "First Blood",
       narrative: [`<p>Sickbay alarms flare.</p><p>A security officer lies critically wounded, their uniform torn, blood staining the deck. The signs point to a struggle &mdash; close, desperate, and brief.</p><p>The Doctor looks up from her work.</p><p>&ldquo;Captain&hellip; keeping them alive will drain power we may not have.&rdquo;</p>`],
       prompts: [
         {
           option: "A",
-          case: 'bot',
+          case: 'opp',
           prompt: `Send a search party with orders to bring the intruders in &mdash; dead or alive.`,
           outcomes: [
             `The stowaways are cornered &mdash; but an officer resigns in protest.`,
@@ -105,7 +105,7 @@ export const story = {
         },
         {
           option: "B",
-          case: 'bot',
+          case: 'opp',
           prompt: `Prioritize vigilance. Inform the crew to keep a sharp eye and give the officer as much medical attention as is necessary to keep them alive.`,
           outcomes: [
             `The officer survives and becomes fiercely loyal.`,
@@ -117,7 +117,7 @@ export const story = {
         },
         {
           option: "C",
-          case: 'bot',
+          case: 'opp',
           prompt: `Give them medical attention, but prioritize the lives of the healthy over the lives of the wounded with the remaining life support.`,
           outcomes: [
             `The officer dies peacefully.`,
@@ -129,7 +129,7 @@ export const story = {
         },
         {
           option: "D",
-          case: 'bot',
+          case: 'opp',
           prompt: `Tell the doctor to do what she can without getting too involved, while you lead a search party in tracking down the stowaways, leaving the bridge under the command of your first officer.`,
           outcomes: [
             `You personally capture a stowaway.`,
@@ -169,8 +169,8 @@ export const story = {
           prompt: `Use them as bait.`,
           outcomes: [
             `Another stowaway reveals themselves attempting a rescue. A brief skirmish ends with one wounded and escaping into the ventilation system.`,
-            `The plan works &mdash; but several officers openly question your ethics. A senior officer requests reassignment, triggering a morale side arc.`,
-            `The bait succeeds only because a junior officer puts themselves in harm's way, sustaining severe injuries but saving others.`
+            `The plan works &mdash; One of the stowaways comes to take their comrade back to wherever they're hiding out, but your crew ambush them and take them back to the bridge.`,
+            `<p>The bait succeeds only because a junior officer puts themselves in harm's way, sustaining severe injuries but saving others.</p><p>The captured stowaway turns out to be the leader of the group &mdash; leaving the remainig stowaways scattered and dissorganized.</p>`
           ],
           path: "courage",
           map: []
@@ -213,7 +213,7 @@ export const story = {
         },
         {
           option: "alt-B",
-          case: 'bot',
+          case: 'opp',
           prompt: `Address the Crew Shipwide issuing a seek & destroy order `,
           outcomes: [
             `Morale improves. Volunteers step forward to assist security.`,
@@ -224,7 +224,7 @@ export const story = {
         },
         {
           option: "alt-C",
-          case: 'bot',
+          case: 'opp',
           prompt: `Negotiate with the Remaining Prisoners`,
           outcomes: [
             `One prisoner betrays the others to save themselves.`,
@@ -236,7 +236,7 @@ export const story = {
         },
         {
           option: "alt-D",
-          case: 'bot',
+          case: 'opp',
           prompt: `Prioritize Damage Control Over the Hunt`,
           outcomes: [
             `Life support steadies, but the stowaways remains at large.`,
@@ -248,7 +248,7 @@ export const story = {
         },
       ]
     },
-    bot: {
+    opp: {
       title: "First Sunken Ship",
       narrative: [
         `<p>One of crew hails you on your badge with a cautious tone.</p><p> &ldquo;Captain, one of the prisoners has escaped.&rdquo;</p><p>Others remain hidden.<br />The ship is wounded, drifting, and unstable.</p>`,
@@ -258,12 +258,12 @@ export const story = {
       map: [
         'if (p2.user) {narrative=narrative[0]}',
         'if (p2.user && p2.optD) {narrative=narrative[1]}',
-        'if (p2.bot) {narrative=narrative[2]}'
+        'if (p2.opp) {narrative=narrative[2]}'
       ],
       prompts: [
         {
           option: "A",
-          case: 'bot',
+          case: 'opp',
           prompt: `Seal the Brig and Adjacent Decks`,
           outcomes: [
             `The escapee is trapped &mdash; but innocent crew members are trapped too.`,
@@ -275,7 +275,7 @@ export const story = {
         },
         {
           option: "B",
-          case: 'bot',
+          case: 'opp',
           prompt: `Address the Crew Shipwide`,
           outcomes: [
             `Morale improves. Volunteers step forward to assist security.`,
@@ -287,7 +287,7 @@ export const story = {
         },
         {
           option: "C",
-          case: 'bot',
+          case: 'opp',
           prompt: `Negotiate with the Remaining Prisoners`,
           outcomes: [
             `One prisoner betrays the others to save themselves.`,
@@ -299,7 +299,7 @@ export const story = {
         },
         {
           option: "D",
-          case: 'bot',
+          case: 'opp',
           prompt: `Prioritize Damage Control Over the Hunt`,
           outcomes: [
             `Life support steadies, but the stowaway remains at large.`,
@@ -368,14 +368,14 @@ export const story = {
         },
       ],
     },
-    bot: {
+    opp: {
       title: "Turning Point ",
       narrative: [`<p>The ship shudders violently.</p><p>The nebula pulses.</p><p>Something is changing.</p><p>The stowaways have captured 2 more of your crew and taken control of the ships computer. They've taken over 2 full decks. Despite the fact that it seems like you may never escape this nebula or regain control of your ship before it plunges into a black hole, you must press on.</p>`],
       map:[],
       prompts: [
         {
           option: "A",
-          case: 'bot',
+          case: 'opp',
           prompt: `Go on the Defensive`,
           outcomes: [
             `The enemy's advance slows but morale remains low.`,
@@ -387,7 +387,7 @@ export const story = {
         },
         {
           option: "B",
-          case: 'bot',
+          case: 'opp',
           prompt: `Sacrifice Firepower And Try To Negotiate`,
           outcomes: [
             `Relations stabilize.`,
@@ -399,7 +399,7 @@ export const story = {
         },
         {
           option: "C",
-          case: 'bot',
+          case: 'opp',
           prompt: `Hunt the Stowaways Relentlessly`,
           outcomes: [
             `One is eliminated.`,
@@ -411,7 +411,7 @@ export const story = {
         },
         {
           option: "D",
-          case: 'bot',
+          case: 'opp',
           prompt: `Broadcast another Distress Signal Into the Void`,
           outcomes: [
             `Signal escapes the nebula.`,
@@ -478,14 +478,14 @@ export const story = {
         },
       ],
     },
-    bot: {
+    opp: {
       title: "Event Horizon",
       narrative: [`<p>One of the crew sees the event horizon of a black hole on the ships scanners.</p><p>It looks like the end is near.</p><p>As the captain you know that the ship has a hidden shuttle that has the ability and reserve power to take a small crew of no more than 5 away from the gravity well&mdash;abandoning ship&mdash; but living another day in hopes of somehow surviving and defeating the ship to which you'd initially lost the battle.</p>`],
       map:[],
       prompts: [
         {
           option: "A",
-          case: 'bot',
+          case: 'opp',
           prompt: `Give up and try to make the end as pleasant as possible by flooding the ship with a chemical compund that will make everybody go to sleep.`,
           outcomes: [],
           path: "duty",
@@ -493,7 +493,7 @@ export const story = {
         },
         {
           option: "B",
-          case: 'bot',
+          case: 'opp',
           prompt: `Call everybody to the Holo deck despite any remaining adversaries that may still be lurking on board. This way everybody can be together.`,
           outcomes: [],
           path: "courage",
@@ -501,7 +501,7 @@ export const story = {
         },
         {
           option: "C",
-          case: 'bot',
+          case: 'opp',
           prompt: `Keep fighting, doing what you can to preserve life support functions for as long as possible.`,
           outcomes: [],
           path: "duty",
@@ -509,7 +509,7 @@ export const story = {
         },
         {
           option: "D",
-          case: 'bot',
+          case: 'opp',
           prompt: `Take your favorite crew mates&mdash;in addition to one of the wounded enemy as collateral&mdash; with you to the shuttle and abandon ship. <em>Although you're still in deep space, too far from any other planets to be saved, your best bet is to be taken prisoner by the other ship, if it's still there&mdash; or hope another Starfleet ship comes in search of your lost ship.`,
           outcomes: [
             `<p>You launch the shuttle into the void, leaving the ship &mdash; and everyone still aboard &mdash; behind.</p><p>The nebula swallows your former command without ceremony.</p><p>No enemy ship emerges from the clouds.<br />No Starfleet signal answers your calls.</p><p>Drifting in deep space, hope thins with every passing hour.</p><p>Unless fate shifts &mdash; unless you somehow turn the tide and reclaim victory &mdash; this is where your story ends.</p><p>And if you do defy the odds&hellip;<br />The enemy ship is waiting.</p><p>Not as an executioner &mdash; but as your captor.</p>`,
@@ -560,7 +560,7 @@ export const story = {
         },
       ],
     },
-    bot: {
+    opp: {
       title: "The Nexus",
       narrative: [`Strange anomalies begin to occur as the ship gets pulled in.</p><p>Just when it seems like all is lost, a strange ribbon of plasma seeming to span lightyears in length rushes around the horizon of the black hole, straight toward the ship.</p><p>The ribbon makes contact with the ship, and then&mdash;</p><p>there is nothing.</p>`],
       map: [
@@ -570,7 +570,7 @@ export const story = {
       prompts: [
         {
           option: "Y",
-          case: 'bot',
+          case: 'opp',
           prompt: `Breathe`,
           outcomes: [
             `<p>You find yourself standing in a valley.</p> <p>It stretches endlessly in every direction — rolling grass, distant mountains softened by haze, a sky too blue to be real.</p> <p>No wind.</p> <p>No sound.</p> <p>You look down at your hands. Uninjured. Clean. Whole.</p> <p>You don't remember arriving here.</p> <p>You don't remember leaving.</p> <p>The last thing you remember was— <em>playing some game with a stranger.</p><p>Who was it? What were we playing?</em></p><p>No— the bridge — alarms, calculations, impossible odds — and then… nothing.</p> <p>You begin to walk.</p> <p>The ground yields gently beneath your boots, but the landscape never changes. No matter how far you go, the mountains never draw closer. The sun never shifts.</p> <p>This is wrong.</p> <p>You stop.</p> <p>The realization doesn't arrive as panic, but as certainty.</p> <p>This is a construct.</p> <p>A solution without a problem. A destination without a journey.</p> <p>You close your eyes and try to retrace the moments before this place — the decisions, the sacrifices, the rules you followed because they were necessary.</p> <p>Memory returns in fragments.</p> <p>The valley waits, patient and silent.</p> <p>You turn, not to escape — but to test it.</p> <p>If this is an illusion… then it has limits.</p> <p>And limits can be found.</p>`,
@@ -583,7 +583,7 @@ export const story = {
         },
         {
           option: "Z",
-          case: 'bot',
+          case: 'opp',
           prompt: `Do Nothing`,
           outcomes: [`You died.`],
           map: []
