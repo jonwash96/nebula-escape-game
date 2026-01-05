@@ -248,7 +248,7 @@ export default class Board {
 			case 'd': {this.disc.classList.toggle('hide')} break;
 			case 'r': {this.shipRotation -= 90; this.shipRotation < 0 && (this.shipRotation = 360)} break;
 			case 'x': {if (this.mode()==='place-ships') {this.placeItem.item = null; this.doCleanCellResidue()}} break;
-			case 's': {this.root.classList.contains('active-board') && this.mode('toggle-subspace')} break;
+			case 's': {if (this.mode()==='place-ships' && this.root.classList.contains('active-board')) (this.mode('toggle-subspace'))} break;
 		}
 	}
 

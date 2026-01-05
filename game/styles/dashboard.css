@@ -264,6 +264,8 @@ main {
             display:grid;
             grid-template: auto / 1fr 1fr;
             gap: 6px;
+
+            & div[title="phaseCannon"] {display:none;}
         }
         & div svg {height:70%;}
     }
@@ -431,16 +433,6 @@ main {
     }
     
 }
-
-dialog {
-    width: 480px;
-    border: 1px solid var(--gold);
-    text-align: center;
-    z-index:1000;
-
-    & button {margin-top:2em;}
-}
-dialog::backdrop {background: #5005;}
 
 #pause-menu ul {
     list-style: none;

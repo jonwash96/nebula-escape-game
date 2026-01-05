@@ -48,7 +48,7 @@
 .tile-btn.active.blue:hover {background-color:var(--lblue) !important;color:white !important;}
 .cyan {background-color:var(--cyan) !important;color:var(--dblue) !important;}
 .tile-btn.active.cyan:hover {background-color:var(--lcyan) !important;color:var(--dblue) !important;}
-.gold {background-color:var(--gold) !important;}
+.gold {background-color:var(--gold) !important; color:black;}
 .tile-btn.active.gold:hover {background-color:var(--lgold) !important;}
 .green {background-color:var(--green) !important;color:black !important;}
 .dgreen {background-color:var(--dgreen) !important;color:black !important;}
@@ -118,3 +118,19 @@ nav {
     &::before {content:"▶️ ";}
     & input:checked ~ &::before {content:"🔽 ";}
 }
+
+dialog {
+    width: 480px;
+    border: 1px solid var(--gold);
+    text-align: center;
+    z-index:1000;
+
+    & button {margin-top:2em;}
+    &.wide {width:900px !important;}
+    &:has(article), &:has(section) {
+        height:80vh;
+        & article,section {text-align:left;}
+        & ul {list-style: circle;}
+    }
+}
+dialog::backdrop {background: #5005;}

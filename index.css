@@ -133,3 +133,32 @@ ul {list-style: none;}
         gap:1em;
     }
 }
+
+#notification {
+    grid-area: notif;
+    display:flex;
+    justify-content: center;
+    align-items: flex-end;
+    pointer-events: none;
+    width:800px;
+    position:absolute;
+    left:50vw;
+    top:180px;
+    transform:translateX(-50%);
+    
+    & h4 {margin:6px;}
+    & div {
+        background-color: var(--gold);
+        color:black;
+        width:80%;
+        margin-bottom:1em;
+        text-align:center;
+        padding:0.5em;
+        border-radius: 3px;
+        box-shadow: 0 0 25px #fc18;
+        opacity:0;
+        transition: opacity 1s ease-in-out;
+    }
+}
+.show-notify {opacity:1!important;}
+.hide-notify {opacity:0;transition:opacity 2s ease-out;}

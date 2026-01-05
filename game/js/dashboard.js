@@ -1,6 +1,6 @@
 import Player from "./Player.js";
 import BOT from "./BOT.js";
-import { nav } from "../../nav_dev.js";nav();
+// import { nav } from "../../nav_dev.js";nav();
 
 // BUS
 class Signal {
@@ -228,7 +228,7 @@ const modals = {
             this.listen(this.curry);
             this.target.showModal();
             this.target.children[1].textContent = state.turn?.player?.name || '';
-            if (state.turn?.player?.password) {
+            if (settings.switchUserPw && state.turn?.player?.password) {
                 this.target.children[2].textContent = this.passwordUserMessage;
                 this.target.children[3].style.display = 'block';
             } else {
@@ -250,8 +250,10 @@ const modals = {
                 }
             } else {
                 this.count++;
-                const val = settings.switchUserModal ? 3 : 1;
-                this.count===val && (exit = true);
+                settings.switchUserModal===false 
+                    ? this.count===3 && (exit = true)
+                    : this.count===1 && (exit = true);
+                
             };
 
             if (exit) { this.count = 0;
@@ -315,11 +317,7 @@ const modals = {
         playBtn: document.querySelector('#pause-menu .btn-block button:nth-child(2)'),
         count: 0,
         listen() {buttons.pause.addEventListener('click', modals.pause.show.bind(modals.pause))},
-        quitGame() { this.count++;
-            count===0 && (this.quitGameBtn.textContent = "Quit Game");
-            count===1 && (this.quitGameBtn.textContent = "Press 2X more");
-            count===2 && (this.quitGameBtn.textContent = "Press 1X more");
-            count===3 && (window.location = "../index.html");
+        quitGame() { window.location = "../index.html";
         },
         playGame(option) { this.count = 0;
             document.querySelectorAll('#pause-menu ul li input').forEach(item=>{
@@ -1320,7 +1318,6 @@ async function handleFailToLoad(err) {
     }
 }
 
-document.addEventListener('keypress', (e)=>{if (!p1.board.enableKeyboard && e.key=='z')recover(true)});
 function recover(e) {
     if(e) {sessionStorage.removeItem('recovery-error');recoveryCounter=0;}
     else{recoveryCounter++;}
@@ -1329,6 +1326,7 @@ function recover(e) {
     console.log("PLAYERS: ", p1,p2);
     console.log("STATE: ", state);
     mode(getState('gameMode'), p1);
+    window.location.reload();
 }
 
 

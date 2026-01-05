@@ -10,17 +10,100 @@
     <script defer src="./game/js/registrationModal.js"></script>
 </head>
 <body>
+    <dialog id="gameplay-modal" class="midnight wide">
+        <h1>Gameplay</h1>
+        <article><h2>How to Play Nebula Escape</h2>
+            <p>Nebula Escape is a Star Trek themed Battleships-like role-playing boardgame, using rules similar to the Salvo edition of Battleships.</p>
+            <p>Players begin by setting up their ships on the battlefield in 90 degree orientations.</p>
+            <p>Once ships are placed, if story-mode is selected, the game will navigate to a piece of the story.</p>
+            <p>The story is configured for the first player, while the second player plays the part of the enemy in battle.</p>
+            <p>Both users can choose either opposite sides, or the same side (Starfleet or Enemy).</p>
+            <p>Once the game begins, players take turns firing shots at their opponent to try &amp; destroy their ships.</p>
+            <p>The opponent's board will be in subspace mode, allowing the player taking their turn to only see the hits &amp; misses.</p>
+            <p>Before a user takes their turn, both boards will automatically enter subspace mode, and the player will be prompted either to enter their password, or to press a button to take their turn. This prevents the other player from cheating.</p>
+            <p>Each turn, exactly 5 shots must be placed on the opponent's board. You will not be allowed to fire with more or less. Should you need to remove a shot, simply click it again to do so.</p>
+            <p>You can place more shots if you're thinking, and remove the extra ones when you're ready to fire.</p>
+            <p>When the shot count is satisfied, the fire button becomes active. Once you press it, your board will automatically enter subspace mode, and a dialog will prompt you to continue the attack so that both players can watch as the shots are fired and evaluated.</p>
+            <p>Once all shots have been fired, a summary will appear at the top of the screen, and each shot will be recorded in the player's summary panel, along with achievements.</p>
+            <p>Achievements follow the story, and include the following:</p>
+            <ul>
+                <li><strong>First Blood:</strong> When the first ship is hit</li>
+                <li><strong>First Sunken </strong>Ship: When the first ship is sunk</li>
+                <li><strong>Turning Point:</strong> When 3/5 ships are sunk</li>
+                <li><strong>Victory In Sight:</strong> When 4/5 ships are sunk (Called Event Horizon if the enemy gets the achievement)</li>
+                <li>And finally, <strong>winning the game</strong> (whether for the story-mode player or their opponent)</li>
+            </ul>
+            <p>Each of the achievements takes you to the story mode, where a short narrative is read, and you are prompted to select from a list to make a decision.</p>
+            <p>Snippets of the story are reflected on the game dashboard after each one.</p>
+            <p>The game is won by the first player to sink all 5 of the enemy's ships.</p>
+            <p>Upon winning or losing the game, there is a final piece of the story to indulge, before returning back to the dashboard for a game summary, where you can view the final board and review each hit.</p>
+            <p>See the Controls section for how to operate the interface.</p>
+        </article>
+        <div class="btn-block">
+            <button type="button" class="tile-btn steelblue active">Ok</button>
+            <button type="button" class="tile-btn dblue active">Controls</button>
+            <button type="button" class="tile-btn blue active">Begin Game</button>
+        </div>
+    </dialog>
+    <dialog id="controls-modal" class="midnight wide">
+        <h1>Gameplay</h1>
+        <section>
+            <h2>Controls</h2>
+            <h3>General</h3>
+            <ul>
+                <li>Reload the page to reboot the app in the event anything becomes out of sync. If this fails, try beginning a new game.</li>
+                <li>Use the 'Orient' button to toggle the orientation of the boards between side-by-side &amp; head-to-head (default).</li>
+                <li>Use the 'Focus' button toggle between showing 1 &amp; 2 boards.</li>
+                <li>Use the pause button to access settings (see advanced).</li>
+            </ul>
+            <h3>Placing Ships</h3>
+            <ul>
+                <li>Use the 'Auto' button to have each ship automatically delivered to your crosshairs upon placing the previous one. (Reload the page if you need to change the positions).</li>
+                <li>Or click on a ship from the dashboard and then hover over the board to place it.</li>
+                <li>Use the 'R' key on your keyboard to rotate the ships by 90 degrees.</li>
+                <li>Use the 'X' key to cancel an unplaced ship.</li>
+                <li>Use the 'S' key to toggle subspace mode for the active board.</li>
+            </ul>
+            <h3>Targeting Mode</h3>
+            <ul>
+                <li>Click a weapon from the targeting panel, then click an empty cell on the board to place it. Click a red cell to remove a placed shot. (Please do not click on white or green cells while targeting, as this can cause strange behavior.) (Some weapons only allow you to place 2 or 3 shots per turn.)</li>
+                <li>Use the 'Toggle Subspace' Button to show/hide your board.</li>
+                <li>Use the 'B' Key to toggle the targeting brackets. Hint: The little node at left is useful for identifying which cell is under the crosshairs.</li>
+                <li>Use the 'D' Key to toggle the targeting disk.</li>
+                <li>Use the 'C' key to toggle both the targeting brackets &amp; the targeting disk simultaneously (Crosshairs-only).</li>
+                <li>Use the 'spacebar' to pause follow-mode.</li>
+            </ul>
+            <h3>Advanced Settings (For geeks &amp; super-users only)</h3>
+            <ul>
+                <li>Enable the Recovery button to interact with the app through the console. (Browser console input is unavailable, output is not).</li>
+                <li>Enable the dev_toggleOppSubspace button to allow the inactive board to be brought out of subspace mode on command.</li>
+                <li>Disable the password or change the number of clicks to 1 for switching users.</li>
+            </ul>
+            <h3>Narrative</h3>
+            <ul>
+                <li>Click an option to choose your answer. (Please choose only 1 answer, as sometimes choosing a second can cause strange behavior).</li>
+                <li>Click the 'Continue' button to advance to the next step.</li>
+                <li><strong>Note:</strong> If you're curious and unsatisfied with an outcome; there are hidden easter eggs for those who seek more.</li>
+            </ul>
+        </section>
+        <div class="btn-block">
+            <button type="button" class="tile-btn steelblue active">Ok</button>
+            <button type="button" class="tile-btn dblue active">Gameplay</button>
+            <button type="button" class="tile-btn blue active">Begin Game</button>
+        </div>
+    </dialog>
+
     <img src="./assets/svg/logotype.svg">
     <h2 id="battleships-subhead">A Battleships Game</h2>
     <ul id="menu">
         <li><span>Game Setup</span></li>
         <li><span>Gameplay</span></li>
-        <li><span>Rules</span></li>
+        <li><span>Controls</span></li>
         <li class="expandable-menu-wrapper" id="load-menu">
             <span>Load</span>
             <div>
                 <span>Browser</span>
-                <span>Clear</span>
+                <span title="Clear The browser storage (Automatic on new game)">Clear</span>
             </div>
         </li>
         <li class="expandable-menu-wrapper" id="start-menu">
@@ -65,7 +148,7 @@
             
             <span id="incorrect-password" style="color:#f66;"></span>
             <label for="modal-password">Password<br>
-                <span>Passwords must match exactly, else new user with same name created. If no password, no user state saved.</span>
+                <span>Passwords must match exactly, otherwise a new user with name1... will be created. If no password, no user data is saved.</span>
             </label><br>
             <input id="modal-password" type="password" placeholder="Optional. (*Plain text only*) Enter this if you have/set a username."><br>
         
@@ -91,5 +174,12 @@
             <button id="submit" type="button" class="tile-btn clickable blue">Play</button>
         </div>
     </section>
+
+    <div id="notification">
+        <div>
+            <h4>Feature Coming Soon!</h4>
+            <span>Stay tuned</span>
+        </div>
+    </div>
 </body>
 </html>
